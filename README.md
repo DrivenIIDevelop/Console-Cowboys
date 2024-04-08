@@ -2,6 +2,11 @@
 
 This repository is for the DevC 1.0 hackathon, and the Console Cowboys team. We will be building a "Healthcare Communication and Collaboration Software".
 
+## Contributing
+
+If you are a member of the Console Cowboys, you should have permissions to push to this repository except for the main branch.
+To contribute, create a new branch (or fork). Make your commits there and push that branch/fork. Then you can create a pull request when you are ready to have your changes integrated into the main branch.
+
 ## Features, requirements
 
 We have the following features as things we plan to implement in some way:
