@@ -1,0 +1,17 @@
+# Note that these styles are not automatically enforced.
+# You can use the extension EditorConfig for VS Code which will "try" to enforce them.
+# However, from my use it doesn't work all the time so you might still encounter some issues if your VS Code settings don't match.
+
+# top-most EditorConfig file
+root = true
+
+# All code files
+[*]
+
+# Users should be allowed to customize the displayed indentation size. Tabs are the way to do that.
+indent_style = tab
+
+# These should reduce cases where file or line changes include only an unintentional change to whitespace.
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
