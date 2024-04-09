@@ -1,0 +1,12 @@
+# General
+.DS_Store
+
+# Python
+backend/venv/
+*.pyc
+__pycache__/
+
+# Node
+frontend/myapp/node_modules/
+frontend/myapp/.env
+frontend/myapp/build/
