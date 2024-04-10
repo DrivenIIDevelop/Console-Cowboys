@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-xdyz6-npg4j@!0o$9n(73j1a1gqc#wkjfbcuu4d3r#b8o59=tw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '0.0.0.0']
 
 
 # Application definition
@@ -37,7 +37,16 @@ INSTALLED_APPS = [
 	"django.contrib.sessions",
 	"django.contrib.messages",
 	"django.contrib.staticfiles",
+	"django_vite",
+	"scrub_hub_frontend",
 ]
+
+DJANGO_VITE = {
+	"default": {
+		"dev_mode": DEBUG,
+		"manifest_path": BASE_DIR / 'vite_dist/manifest.json', # This won't be used in dev mode.
+	}
+}
 
 MIDDLEWARE = [
 	"django.middleware.security.SecurityMiddleware",
@@ -110,6 +119,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [
+	BASE_DIR / "vite_dist", # This won't be used in dev mode.
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
