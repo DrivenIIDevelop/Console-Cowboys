@@ -10,8 +10,10 @@ To contribute, create a new branch (or fork). Make your commits there and push t
 ## Developing
 
 To run in dev mode, you need two terminals to start Vite and Django:
-* From scrub_hub_vite: npm run dev
+* From scrub_hub_project: venv\Scripts\activate
 * From scrub_hub_project: python manage.py runserver
+* From scrub_hub_vite: npm run dev
+
 
 Then open localhost:8000 (Django's port) in a browser.
 
