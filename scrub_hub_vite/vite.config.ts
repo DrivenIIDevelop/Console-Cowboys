@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
+// NOTE: This file is not used in dev mode and probably doesn't really need to even exist right now.
 export default defineConfig({
 	plugins: [react()],
 	base: '/static/',

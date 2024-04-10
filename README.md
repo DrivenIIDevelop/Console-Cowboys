@@ -7,6 +7,16 @@ This repository is for the DevC 1.0 hackathon, and the Console Cowboys team. We 
 If you are a member of the Console Cowboys, you should have permissions to push to this repository except for the main branch.
 To contribute, create a new branch (or fork). Make your commits there and push that branch/fork. Then you can create a pull request when you are ready to have your changes integrated into the main branch.
 
+## Developing
+
+To run in dev mode, you need two terminals to start Vite and Django:
+* From scrub_hub_vite: npm run dev
+* From scrub_hub_project: python manage.py runserver
+
+Then open localhost:8000 (Django's port) in a browser.
+
+Production mode isn't fully set up and probably never will be for this MVP.
+
 ## Features, requirements
 
 We have the following features as things we plan to implement in some way:
