@@ -9,6 +9,11 @@ To contribute, create a new branch (or fork). Make your commits there and push t
 
 ## Developing
 
+To get yourself up and running, From scrub_hub_project:
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+
 To run in dev mode, you need two terminals to start Vite and Django:
     In first terminal:
 * From scrub_hub_project: venv\Scripts\activate
@@ -18,6 +23,7 @@ To run in dev mode, you need two terminals to start Vite and Django:
 * From scrub_hub_project: venv\Scripts\activate
 * From scrub_hub_vite: npm run dev
 
+If we require any further pip dependencies, please add them to scrub_hub_project\requirements.txt
 
 Then open localhost:8000 (Django's port) in a browser.
 
