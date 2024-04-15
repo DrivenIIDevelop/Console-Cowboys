@@ -119,10 +119,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
-STATICFILES_DIRS = [
-	BASE_DIR / "vite_dist", # This won't be used in dev mode.
-]
-
+if DEBUG:
+	STATICFILES_DIRS = [
+		BASE_DIR / "../scrub_hub_vite/public",
+		BASE_DIR / "../scrub_hub_vite",
+	]
+else:
+	STATICFILES_DIRS = [
+		BASE_DIR / "vite_dist",
+	]
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
