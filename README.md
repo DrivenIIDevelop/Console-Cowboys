@@ -9,23 +9,33 @@ To contribute, create a new branch (or fork). Make your commits there and push t
 
 ## Developing
 
-To get yourself up and running, From scrub_hub_project:
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
+### Setup
 
-To run in dev mode, you need two terminals to start Vite and Django:
-    In first terminal:
-* From scrub_hub_project: venv\Scripts\activate
-* From scrub_hub_project: python manage.py runserver
+This project requires that Python and Node.js be installed. Depending on your Python installation, python commands below may require that you type `python3` instead of `python`.
 
-    In second terminal
-* From scrub_hub_project: venv\Scripts\activate
-* From scrub_hub_vite: npm run dev
+To set up your development environment, you'll need to install the Python dependencies listed in requirements.txt. It is recommended that you first set up a Python virtual environment:
+* Ensure your current directory is /scrub_hub_project (and not /scrub_hub_project/scrub_hub_project)
+* Create virtual environment: `python -m venv venv` (do this only once after cloning)
+* Activate virtual environment: (do this every time you open a new terminal)
+	* Windows: `venv\Scripts\activate`
+	* Linux/Mac: `source venv/bin/activate`
+* Install Python dependencies:  `pip install -r requirements.txt` (do this once after cloning and whenever requirements.txt is updated)
 
 If we require any further pip dependencies, please add them to scrub_hub_project\requirements.txt
 
+You will also need to install dependencies from package.json:
+* Ensure your current directory is /scrub_hub_vite
+* Install dependencies: `npm install` (do this once after cloning and whenever dependencies in package.json are updated)
+
+### Running the project
+
+To run in dev mode, you need two terminals to start Vite and Django:
+* From scrub_hub_project: `python manage.py runserver`
+* From scrub_hub_vite: `npm run dev`
+
 Then open localhost:8000 (Django's port) in a browser.
+
+If this doesn't work, ensure you have the dependencies installed and your Python virtual environment is active. (See above "Setup" section.)
 
 Production mode isn't fully set up and probably never will be for this MVP.
 
