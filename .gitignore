@@ -4,6 +4,7 @@
 # Django and Python
 scrub_hub_project/**/__pycache__/
 scrub_hub_project/*.sqlite3
+venv/
 
 # vite and Node
 scrub_hub_vite/node_modules/
