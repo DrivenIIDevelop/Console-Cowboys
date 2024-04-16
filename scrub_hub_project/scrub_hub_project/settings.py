@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-xdyz6-npg4j@!0o$9n(73j1a1gqc#wkjfbcuu4d3r#b8o59=tw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '0.0.0.0']
+ALLOWED_HOSTS = ['localhost', '0.0.0.0', '127.0.0.1']
 
 
 # Application definition
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 	"anymail",
 	"channels", # Async support (used for websockets in chat)
 	"scrub_hub_chat",
+	"authenticate",
 ]
 
 DJANGO_VITE = {
@@ -160,6 +161,6 @@ CORS_ORIGIN_ALLOW_ALL = True # Use this for development only
 
 EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 DEFAULT_FROM_EMAIL = "consolecowboytest@gmail.com"
-SERVER_EMAIL = "consolecowboytest@gmail.com" 
+SERVER_EMAIL = "consolecowboytest@gmail.com"
 
 # End of Email Functionality
