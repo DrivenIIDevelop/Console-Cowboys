@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 
 from . forms import CreateUserForm, LoginForm
 
-from django.contrib.auth.models import auth
+# from django.contrib.auth.models import auth
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
@@ -41,7 +41,7 @@ def my_login(request):
             user = authenticate(request, username=username, password=password)
 
             if user is not None:
-                auth.login(request, user)
+                login(request, user)
 
                 return redirect("dashboard")
             
@@ -51,7 +51,7 @@ def my_login(request):
 
 def user_logout(request):
     
-    auth.logout(request)
+    logout(request)
 
     return redirect("")
 
