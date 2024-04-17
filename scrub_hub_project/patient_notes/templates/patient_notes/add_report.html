@@ -1,0 +1,25 @@
+<!-- add_report.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Add Patient Report</title>
+	</head>
+	<body>
+		<h1>Add Patient Report</h1>
+		<form method="post" action="{% url 'add_patient_report' patient %}">
+			{% csrf_token %}
+			<label for="medical_condition">Medical Condition:</label>
+			<input
+				type="text"
+				id="medical_condition"
+				name="medical_condition"
+				required
+			/><br />
+			<label for="content">Notes:</label>
+			<textarea id="content" name="content"></textarea><br />
+			<button type="submit">Save Report</button>
+		</form>
+	</body>
+</html>

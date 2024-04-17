@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 	"django.contrib.staticfiles",
 	"django_vite",
 	"scrub_hub_frontend",
+	"patient_notes",
 ]
 
 DJANGO_VITE = {
