@@ -17,9 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+# HTTP
 urlpatterns = [
 	path("admin/", admin.site.urls),
 	path('', include('scrub_hub_frontend.urls')),
+	path('api/', include('email_app.urls')),
 	path('notes/', include('patient_notes.urls')),
-  path('api/', include('email_app.urls')),
+	path('messages/', include('scrub_hub_chat.urls')),
+]
+
+# Websocket
+from scrub_hub_chat import consumers
+websocket_urlpatterns = [
+	path("ws/", consumers.ChatConsumer.as_asgi()),
 ]
