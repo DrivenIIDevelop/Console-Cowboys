@@ -71,7 +71,8 @@ ROOT_URLCONF = "scrub_hub_project.urls"
 TEMPLATES = [
 	{
 		"BACKEND": "django.template.backends.django.DjangoTemplates",
-		"DIRS": [],
+		# "DIRS": [],
+		"DIRS": [BASE_DIR / "../scrub_hub_vite/dist"], #Get the index.html and assets
 		"APP_DIRS": True,
 		"OPTIONS": {
 			"context_processors": [
@@ -133,11 +134,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+
 if DEBUG:
 	STATICFILES_DIRS = [
-		BASE_DIR / "../scrub_hub_vite/public",
-		BASE_DIR / "../scrub_hub_vite",
+		# BASE_DIR / "../scrub_hub_vite/public",
+		# BASE_DIR / "../scrub_hub_vite",
+		BASE_DIR / "../scrub_hub_vite/dist", #Using dist folder
 	]
 else:
 	STATICFILES_DIRS = [
@@ -164,3 +167,14 @@ DEFAULT_FROM_EMAIL = "consolecowboytest@gmail.com"
 SERVER_EMAIL = "consolecowboytest@gmail.com"
 
 # End of Email Functionality
+
+# Security settings, could be used for protecting cookies
+CSRF_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SAMESITE = 'Strict'
+
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_HTTPONLY = True
+
+# For production, replace corresponding lines above to True
+# CSRF_COOKIE_HTTPONLY = True
+# SESSION_COOKIE_HTTPONLY = True
