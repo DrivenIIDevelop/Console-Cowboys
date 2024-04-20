@@ -1,0 +1,23 @@
+<!-- view_report.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>View Patient Report</title>
+	</head>
+	<body>
+		<h1>Report Details</h1>
+		<p>
+			<strong>Reporting Physician:</strong> {{report.physician}}
+			{{report.physician.id}}
+		</p>
+		<p><strong>Patient Name:</strong> {{report.patient}}</p>
+		<p><strong>Medical Condition:</strong> {{report.medical_condition}}</p>
+		<p><strong>Note:</strong> {{report.content}}</p>
+		<p><strong>Date Recorded:</strong> {{report.date_recorded}}</p>
+		<a href="{% url 'patient_report_list' report.patient.id %}"
+			>Back to All Reports</a
+		>
+	</body>
+</html>
