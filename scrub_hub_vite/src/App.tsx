@@ -3,8 +3,12 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-function App() {
-	const [count, setCount] = useState(0)
+export type AppProps = {
+	initialCount: number,
+	someString?: string,
+};
+export function App({ initialCount = 0, someString }: AppProps) {
+	const [count, setCount] = useState(initialCount)
 
 	return <>
 		<div>
@@ -20,6 +24,7 @@ function App() {
 			<button onClick={() => setCount((count) => count + 1)}>
 				count is {count}
 			</button>
+			<p>Strings are escaped in the script tag, so they parse correctly: {someString}</p>
 			<p>
 				Edit <code>src/App.tsx</code> and save to test HMR
 			</p>

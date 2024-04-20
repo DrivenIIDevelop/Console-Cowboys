@@ -1,14 +1,12 @@
 from django.shortcuts import render
 
 def index(request):
-	return render(request, 'scrub_hub_frontend/index.html')
-
-
-def send_simple_message():
-	return requests.post(
-		"https://api.mailgun.net/v3/sandbox8b286874e61244339fc3acedffa31c50/messages",
-		auth=("api", "4b670513-2c867c8b"),
-		data={"from": "Excited User <consolecowboytest@gmail.com>",
-			"to": ["bar@example.com", "swordgeo1094@yahoo.com"],
-			"subject": "Hello",
-			"text": "Testing some Mailgun awesomeness!"})
+	objectToPassToReact = {
+		'initialCount': 42,
+		'someString': '"Quotes" work, \\backslashes\\ work, <tags> work.'
+	}
+	# We will pass the object via Django's rendering context
+	# This context should be a dictionary.
+	# You can use whatever key you want; you'll get data from the context by using the key in the HTML template.
+	context = { 'data': objectToPassToReact }
+	return render(request, 'scrub_hub_frontend/index.html', context)
