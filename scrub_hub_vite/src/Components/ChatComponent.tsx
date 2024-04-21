@@ -6,7 +6,7 @@ export type ChatProps = {
 };
 export function ChatComponent({ participants }: ChatProps) {
 	const [messages, ] = useState<string[]>([]);
-	const { readyState } = useWebSocket(`ws://${window.location.host}/ws/`,
+	const { readyState, sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/`,
 		{
 			onOpen: () => console.log('open'),
 			onClose: () => console.log('close'),
@@ -32,6 +32,7 @@ export function ChatComponent({ participants }: ChatProps) {
 	return <>
 		<h2>{participants.join(', ')}</h2>
 		<p>Status: {connectionStatus}</p>
+		<button type='button' onClick={() => sendJsonMessage({message: 'hillo'})}>SEND</button>
 		{messages.map((m, i) => <div key={i}>{m}</div>)}
 	</>
 }

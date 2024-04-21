@@ -86,7 +86,12 @@ TEMPLATES = [
 WSGI_APPLICATION = "scrub_hub_project.wsgi.application"
 # Asyncronous support, for chat
 ASGI_APPLICATION = "scrub_hub_project.asgi.application"
-
+CHANNEL_LAYERS = {
+	"default": {
+		# The InMemory layer is good enough for our MVP, though not a good idea in production.
+		"BACKEND": "channels.layers.InMemoryChannelLayer"
+	}
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
