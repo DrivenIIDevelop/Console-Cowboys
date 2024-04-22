@@ -1,2 +1,8 @@
 django
 django_vite
+djangorestframework
+django-cors-headers
+django-anymail[mailgun]
+beautifulsoup4
+mailjet_rest
+python-dotenv

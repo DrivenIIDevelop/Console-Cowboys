@@ -9,3 +9,6 @@ venv/
 # vite and Node
 scrub_hub_vite/node_modules/
 scrub_hub_project/vite_dist/
+
+# enviornment variables
+.env
