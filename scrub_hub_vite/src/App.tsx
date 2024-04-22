@@ -4,77 +4,14 @@ import LoginPage from './components/Login';
 import RegisterPage from './components/Register';
 import DashboardPage from './components/Dashboard';
 
-interface AppState {
-  isAuthenticated: boolean;
-  // loading: boolean;
-}
-
-class App extends Component<{}, AppState> {
-  constructor(props: {}) {
-    super(props);
-    this.state = {
-      isAuthenticated: false,
-      // loading: true
-    };
-  }
-
-  componentDidMount() {
-    // Check session authentication when the component mounts
-    this.getSession();
-  }
-
-  updateAuthStatus = (status: boolean) => {
-    // Update isAuthenticated state
-    // this.state = {isAuthenticated: status};
-    this.setState({ isAuthenticated: status });
-  };
-
-
-  getSession = () => {
-    //// Make a GET request to the api "/authenticate/session/" URL with "same-origin" credentials
-    fetch("/authenticate/session/", {
-      credentials: "same-origin",
-    })
-    .then((res) => res.json()) //// Parse the response as JSON
-    .then((data) => {
-      console.log(data); // Log the response data to the console
-
-      //// If the response indicates the user is authenticated
-      if (data.isAuthenticated) {
-        this.setState({isAuthenticated: true}); 
-      } else {  
-		// If the response indicates the user is not authenticated
-        this.setState({isAuthenticated: false}); 
-      }
-    })
-      //// Handle any errors that occurred during the fetch
-    .catch((err) => {
-      console.log(err);
-    });
-  }
+class App extends Component {
   render() {
-    const { isAuthenticated } = this.state;
-    // const { isAuthenticated, loading } = this.state;
-
-
-    // If still loading, show a loading indicator
-    // if (loading) {
-    //   return <div>Loading...</div>;
-    // }
-
     return (
       <Router>
         <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage/>} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-
-          {/* Private routes */}
-          <Route
-            path="/dashboard"
-            element={isAuthenticated ? <DashboardPage isAuthenticated={isAuthenticated} updateAuthStatus={this.updateAuthStatus} /> : <LoginPage />}
-          />
-          {/* Other routes */}
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/" element={<LoginPage />} />
         </Routes>
       </Router>
@@ -84,7 +21,7 @@ class App extends Component<{}, AppState> {
 
 export default App;
 
-//------------------------------------------------------------------------------------------
+//------------------------------Previous Implementation without Routing------------------------------------------------------------
 // import React from "react";
 // import Cookies from "universal-cookie";
 

@@ -11,6 +11,7 @@ const RegistrationPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  //Register the user via endpoint
   const handleRegister = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -26,7 +27,7 @@ const RegistrationPage = () => {
     .then(response => response.json())
     .then(data => {
       console.log(data);
-      if (data.detail === "User successfully registered") { // Can change the API later on
+      if (data.detail === "User successfully registered") { // Can change in the API later on and match here
         alert('Registration successful. You can now log in.');
         navigate("/login");
       } else {
