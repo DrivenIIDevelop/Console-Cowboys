@@ -49,7 +49,7 @@ const Dashboard = () => {
       return response.json();
     })
     .then(data => {
-      setUserData(data);
+      setUserData(data); //User data for display
     })
     .catch(err => {
       console.error('Error:', err);

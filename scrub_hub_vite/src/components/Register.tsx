@@ -4,7 +4,7 @@ import Cookies from 'universal-cookie';
 
 const cookies = new Cookies();
 
-const RegistrationPage = () => {
+const Register = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
@@ -30,13 +30,13 @@ const RegistrationPage = () => {
       if (data.detail === "User successfully registered") { // Can change in the API later on and match here
         alert('Registration successful. You can now log in.');
         navigate("/login");
-      } else {
+      } else { //Better way to handle this error if unable to register?
         setError(data.detail || "Registration failed. Please check your information.");
       }
     })
     .catch(err => {
       console.error('Error:', err);
-      setError("An error occurred. Please try again later.");
+      setError("Registration failed. Please check your information and try again.");
     });
   };
 
@@ -55,4 +55,4 @@ const RegistrationPage = () => {
   );
 };
 
-export default RegistrationPage;
+export default Register;

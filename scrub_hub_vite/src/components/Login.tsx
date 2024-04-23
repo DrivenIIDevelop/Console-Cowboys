@@ -4,7 +4,7 @@ import Cookies from 'universal-cookie';
 
 const cookies = new Cookies();
 
-const LoginPage = () => {
+const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -56,4 +56,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default Login;
