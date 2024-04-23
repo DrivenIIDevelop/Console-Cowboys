@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 import datetime
 
-from .models import Conversation
+from .models import Conversation, Message
 from django.contrib.auth.models import User
 
 # Create your views here.
@@ -10,16 +10,21 @@ def conversation(request, conversation_id):
 	# TODO: Auth, and ensure user belongs to requested conversation
 	user_id = User.objects.get(username='chattest 1').id # TODO: Get user from request
 	conversation = Conversation.objects.get(id=conversation_id)
+	oldest_to_look_for = datetime.datetime.now(datetime.UTC)
+	oldest_to_look_for -= datetime.timedelta(days=30)
+	messages = Message.objects \
+		.filter(conversation__id=conversation_id, date__gte=oldest_to_look_for) \
+		.order_by('-date')[:20]
 	data = {
 		'participants': [p.user.username for p in conversation.participants.exclude(user__id=user_id).all()],
 		'messages': [
-			# TODO: Messages from database
 			{
-				'message': 'Hello, there.',
-				'username': 'System',
-				'time': str(datetime.datetime.now(datetime.UTC)),
-			}
+				'message': m.text.decode(),
+				'username': m.user.username,
+				'time': str(m.date),
+			} for m in messages[::-1]
 		],
+		'conversation_id': conversation_id,
 	}
 	return JsonResponse(data)
 

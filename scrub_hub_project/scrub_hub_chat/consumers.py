@@ -7,6 +7,9 @@ from channels.generic.websocket import JsonWebsocketConsumer
 from asgiref.sync import async_to_sync
 from channels.layers import InMemoryChannelLayer
 
+from django.contrib.auth.models import User
+from .models import Conversation, Message
+
 # "We recommend that you write SyncConsumers by default": https://channels.readthedocs.io/en/stable/topics/consumers.html#basic-layout
 class GroupedConsumer(JsonWebsocketConsumer):
 	# Note: Code analysis thinks self.channel_layer is type Any | None
@@ -36,43 +39,66 @@ class ChatConsumer(GroupedConsumer):
 	This group will make it so that a user can have multiple tabs open and see notifications on all of them.
 	We do not have a group for the current conversation. Maybe this will change at some point.
 	"""
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.ignore = None
 
 	def get_user_id(self):
 		# Auth isn't implemented yet
 		# self.scope['user'] ... TODO
-		ChatConsumer.mock_user_id += 1
-		self.user_id = ChatConsumer.mock_user_id
+		users = User.objects.filter(username='chattest 1')
+		if users.count() == 1:
+			self.user = users[0]
+		else:
+			raise Exception('Did not find test user.')
 
-	def get_users_in_conversation(self, conversation_id):
-		# Nothing in the database is set up yet. TODO
+	def get_users_in_conversation(self):
+		conversation = Conversation.objects.get(id=self.conversation_id)
 		users = []
-		for id in range(1, ChatConsumer.mock_user_id + 1):
-			if id == self.user_id:
-				continue
-			users.append(str(id))
-		return users
+		for participant in conversation.participants.all():
+			users.append(str(participant.user.id))
+		self.users_in_conversation = users
 
 
 	def connect(self):
 		self.get_user_id()
-		self.group_add(str(self.user_id))
+		self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
+		self.get_users_in_conversation()
+		self.group_add(str(self.user.id))
 		self.accept()
 
 	def receive_json(self, data):
+		msg_txt: str = data.get('message', None)
+		sender_msg_id: int = data.get('id', None)
+		if type(msg_txt) != str or type(sender_msg_id) != int:
+			raise Exception('Invalid data received.')
+		# TODO: Encrypt msg
+		msg_blob = msg_txt.encode()
+
 		message = {
-			'message': data['message'],
-			'username': f'Guest user {self.user_id}',
+			'message': msg_txt,
+			'username': self.user.username,
 			'time': str(datetime.datetime.now(datetime.UTC)),
 			'type': 'chat_message', # Tells channels what method to use to handle the group message.
 		}
-		# TODO: Add message to database
+		# Add message to database
+		Message(text=msg_blob, conversation_id=self.conversation_id, user=self.user).save()
 
+		# Echo back to the sender so they know it's been received
+		self.send_json({ 'received': sender_msg_id })
+		# We are going to send the message to all participants, including the user who sent it.
+		# If they have two tabs open, this allows the message to appear on their other tab.
+		# But, we will not send it back on the same tab that it first came from.
+		self.ignore = message
 		# Forward the message to each user in the conversation
-		for id in self.get_users_in_conversation(0):
+		for id in self.users_in_conversation:
 			self.group_send(id, message)
 
 	# This is a handler for "group_send". group_send will get and call a function with the name of the message's "type" value.
 	def chat_message(self, event):
+		if self.ignore == event: # This client already has the message (because they sent it)
+			self.ignore = None
+			return
+
 		del event['type']
 		self.send_json(event)
-ChatConsumer.mock_user_id = 0

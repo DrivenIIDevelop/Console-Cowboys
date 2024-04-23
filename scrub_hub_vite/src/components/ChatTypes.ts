@@ -12,7 +12,8 @@ export function isMessageProps(obj?: {[key: string]: unknown}): obj is MessagePr
 	if (!(
 		obj &&
 		typeof obj.message === 'string' &&
-		typeof obj.username === 'string'
+		typeof obj.username === 'string' &&
+		(typeof obj.unconfirmed === 'undefined' || typeof obj.unconfirmed === 'boolean')
 	))
 		return false;
 

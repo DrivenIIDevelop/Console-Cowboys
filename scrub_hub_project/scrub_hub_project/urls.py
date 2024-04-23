@@ -31,5 +31,5 @@ urlpatterns = [
 # Websocket
 from scrub_hub_chat import consumers
 websocket_urlpatterns = [
-	path("ws/", consumers.ChatConsumer.as_asgi()),
+	path("ws/<int:conversation_id>", consumers.ChatConsumer.as_asgi()),
 ]
