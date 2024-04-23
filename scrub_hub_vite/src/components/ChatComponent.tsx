@@ -8,15 +8,11 @@ export type MessageProps = {
 	message: string,
 	username: string,
 	time: Date,
-	unconfirmed?: boolean,
 };
-function MessageComponent({ message, username, time, unconfirmed } : MessageProps) {
+function MessageComponent({ message, username, time } : MessageProps) {
 	return <>
 		<text className={styles.messageUsername}>{username}</text>
-		{ unconfirmed
-			? <text>sending...</text>
-			: <text className={styles.messageTime}>{time.toLocaleString()}</text>
-		}
+		<text className={styles.messageTime}>{time.toLocaleString()}</text>
 		<p className={styles.message}>{message}</p>
 	</>
 }
@@ -24,16 +20,14 @@ function MessageComponent({ message, username, time, unconfirmed } : MessageProp
 export type ChatProps = {
 	participants: string[],
 	messages: MessageProps[],
-	conversation_id: number,
 };
-export function ChatComponent({ participants, messages, conversation_id }: ChatProps) {
+export function ChatComponent({ participants, messages }: ChatProps) {
 	const [messagesState, ] = useState<MessageProps[]>(messages);
-
 	function addMessage(message: MessageProps) {
 		messagesState.push(message);
 	}
 
-	const { readyState, sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/${conversation_id}`,
+	const { readyState, sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/`,
 		{
 			onOpen: () => console.log('open'),
 			onClose: () => console.log('close'),
@@ -41,8 +35,6 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 				const data = JSON.parse(event.data);
 				if (isMessageProps(data)) {
 					addMessage(data);
-				} else if (typeof data.received === 'number') {
-					messagesState[data.received].unconfirmed = false;
 				} else {
 					console.log('invalid data received');
 					console.log(data);
@@ -65,12 +57,10 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 		if (!userMessage)
 			return;
 
-		const message: MessageProps & { id: number } = {
+		const message: MessageProps = {
 			message: userMessage,
 			username: 'You',
 			time: new Date(),
-			unconfirmed: true,
-			id: messagesState.length, // Track when it's been received.
 		};
 
 		sendJsonMessage(message);
