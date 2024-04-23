@@ -2,27 +2,13 @@ import { useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 // TODO: Have actually good styles.
 import styles from './ChatComponent.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
+import { isMessageProps } from './ChatTypes';
 
-type MessageProps = {
+export type MessageProps = {
 	message: string,
 	username: string,
 	time: Date,
 };
-/**
- * Checks if the given object is a MessageProps.
- * If it is a MessageProps except that time is a string (the way it is received from the server), it converts time to a Date.
- * @param obj The object to check and convert.
- */
-function isMessageProps(obj: Partial<MessageProps>): obj is MessageProps {
-	const canBeMessageProps = !!(
-		obj && obj.message && obj.username && obj.time &&
-		typeof obj.message === 'string' &&
-		typeof obj.username === 'string'
-	);
-	if (canBeMessageProps && typeof obj.time === 'string')
-		obj.time = new Date(obj.time as string);
-	return canBeMessageProps;
-}
 function MessageComponent({ message, username, time} : MessageProps) {
 	return <>
 		<text className={styles.messageUsername}>{username}</text>
@@ -33,11 +19,12 @@ function MessageComponent({ message, username, time} : MessageProps) {
 
 export type ChatProps = {
 	participants: string[],
+	messages: MessageProps[],
 };
-export function ChatComponent({ participants }: ChatProps) {
-	const [messages, ] = useState<MessageProps[]>([]);
+export function ChatComponent({ participants, messages }: ChatProps) {
+	const [messagesState, ] = useState<MessageProps[]>(messages);
 	const addMessage = (nessage: MessageProps) => {
-		messages.push(nessage);
+		messagesState.push(nessage);
 	}
 
 	const { readyState, sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/`,
@@ -53,7 +40,7 @@ export function ChatComponent({ participants }: ChatProps) {
 					console.log(data);
 				}
 			},
-			shouldReconnect: (_) => false,
+			shouldReconnect: () => false,
 		}
 	);
 
@@ -86,7 +73,7 @@ export function ChatComponent({ participants }: ChatProps) {
 	return <div className={styles.root}>
 		<h2>Participants: {participants.join(', ')}</h2>
 		<p>Status: {connectionStatus}</p>
-		{messages.map((m, i) => <MessageComponent key={i} {...m} />)}
+		{messagesState.map((m, i) => <MessageComponent key={i} {...m} />)}
 		<input id='messagebox' type='text' placeholder='message' value={userMessage}
 			onChange={(e) => setMessageInput(e.target.value)}
 			onKeyUp={(e) => { if (e.key === 'Enter') send() }}

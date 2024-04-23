@@ -4,14 +4,19 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import '../index.css';
 import GetScriptData from '../GetScriptData.ts';
-import { ChatComponent, ChatProps } from '../components/ChatComponent.tsx';
+import ConversationListComponent from '../components/ConversationListComponent.tsx';
+import { isConversationListProps } from '../components/ChatTypes.ts';
 
 const container: HTMLElement & { reactRoot?: ReactDOM.Root } = document.getElementById('root')!;
 if (!container.reactRoot) {
 	const root = container.reactRoot = ReactDOM.createRoot(container);
+	const props = GetScriptData();
+	if (!isConversationListProps(props))
+		throw 'Invalid props';
+
 	root.render(
 		<React.StrictMode>
-			<ChatComponent {...GetScriptData() as ChatProps} />
+			<ConversationListComponent {...props} />
 		</React.StrictMode>
 	)
 }
