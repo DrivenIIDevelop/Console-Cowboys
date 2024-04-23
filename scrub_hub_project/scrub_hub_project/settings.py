@@ -40,6 +40,8 @@ INSTALLED_APPS = [
 	"django_vite",
 	"scrub_hub_frontend",
 	"patient_notes",
+	"corsheaders",
+	"anymail",
 ]
 
 DJANGO_VITE = {
@@ -57,6 +59,7 @@ MIDDLEWARE = [
 	"django.contrib.auth.middleware.AuthenticationMiddleware",
 	"django.contrib.messages.middleware.MessageMiddleware",
 	"django.middleware.clickjacking.XFrameOptionsMiddleware",
+	"corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "scrub_hub_project.urls"
@@ -133,3 +136,20 @@ else:
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Start of Email Functionality
+
+CORS_ORIGIN_ALLOW_ALL = True # Use this for development only
+
+# in production replace with
+# CORS_ALLOWED_ORIGINS = [
+# "http://localhost:3000", # React app
+# "http://yourdomain.com", # Your production domain
+# ]
+
+EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+DEFAULT_FROM_EMAIL = "consolecowboytest@gmail.com"
+SERVER_EMAIL = "consolecowboytest@gmail.com" 
+
+# End of Email Functionality

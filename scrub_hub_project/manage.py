@@ -43,9 +43,9 @@ def main():
 
 if __name__ == "__main__":
 	# We validate that dependencies are installed first, so that we can give the user a helpful message if they aren't.
-	if not validate_dependencies_installed():
-		import sys
-		if sys.prefix == sys.base_prefix:
-			print('You aren\'t using a Python virtual environment. If you have one, make sure it is activated. See README.md for details.')
-		raise Exception(f'One or more required Python package was not found. Try installing with pip install -r requirements.txt')
+	# if not validate_dependencies_installed():
+	# 	import sys
+	# 	if sys.prefix == sys.base_prefix:
+	# 		print('You aren\'t using a Python virtual environment. If you have one, make sure it is activated. See README.md for details.')
+	# 	raise Exception(f'One or more required Python package was not found. Try installing with pip install -r requirements.txt')
 	main()
