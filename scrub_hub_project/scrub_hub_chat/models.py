@@ -15,3 +15,9 @@ class Conversation(models.Model):
 		"date of most recent message",
 		null=True,
 	)
+
+class Message(models.Model):
+	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+	user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+	text = models.BinaryField(max_length=2000, blank=False)
+	date = models.DateTimeField(default=timezone.now)

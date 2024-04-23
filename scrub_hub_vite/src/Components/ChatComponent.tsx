@@ -8,11 +8,15 @@ export type MessageProps = {
 	message: string,
 	username: string,
 	time: Date,
+	unconfirmed?: boolean,
 };
-function MessageComponent({ message, username, time} : MessageProps) {
+function MessageComponent({ message, username, time, unconfirmed } : MessageProps) {
 	return <>
 		<text className={styles.messageUsername}>{username}</text>
-		<text className={styles.messageTime}>{time.toLocaleString()}</text>
+		{ unconfirmed
+			? <text>sending...</text>
+			: <text className={styles.messageTime}>{time.toLocaleString()}</text>
+		}
 		<p className={styles.message}>{message}</p>
 	</>
 }
@@ -20,14 +24,16 @@ function MessageComponent({ message, username, time} : MessageProps) {
 export type ChatProps = {
 	participants: string[],
 	messages: MessageProps[],
+	conversation_id: number,
 };
-export function ChatComponent({ participants, messages }: ChatProps) {
+export function ChatComponent({ participants, messages, conversation_id }: ChatProps) {
 	const [messagesState, ] = useState<MessageProps[]>(messages);
-	const addMessage = (nessage: MessageProps) => {
-		messagesState.push(nessage);
+
+	function addMessage(message: MessageProps) {
+		messagesState.push(message);
 	}
 
-	const { readyState, sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/`,
+	const { readyState, sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/${conversation_id}`,
 		{
 			onOpen: () => console.log('open'),
 			onClose: () => console.log('close'),
@@ -35,8 +41,10 @@ export function ChatComponent({ participants, messages }: ChatProps) {
 				const data = JSON.parse(event.data);
 				if (isMessageProps(data)) {
 					addMessage(data);
+				} else if (typeof data.received === 'number') {
+					messagesState[data.received].unconfirmed = false;
 				} else {
-					console.log('not a message props');
+					console.log('invalid data received');
 					console.log(data);
 				}
 			},
@@ -57,11 +65,14 @@ export function ChatComponent({ participants, messages }: ChatProps) {
 		if (!userMessage)
 			return;
 
-		const message: MessageProps = {
+		const message: MessageProps & { id: number } = {
 			message: userMessage,
 			username: 'You',
 			time: new Date(),
+			unconfirmed: true,
+			id: messagesState.length, // Track when it's been received.
 		};
+
 		sendJsonMessage(message);
 		addMessage(message);
 		setMessageInput('');
