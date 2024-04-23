@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['localhost', '0.0.0.0']
 # Application definition
 
 INSTALLED_APPS = [
+	"daphne", # Django's development server doesn't support ASGI. Daphne adds that support.
 	"django.contrib.admin",
 	"django.contrib.auth",
 	"django.contrib.contenttypes",
@@ -42,6 +43,8 @@ INSTALLED_APPS = [
 	"patient_notes",
 	"corsheaders",
 	"anymail",
+	"channels", # Async support (used for websockets in chat)
+	"scrub_hub_chat",
 ]
 
 DJANGO_VITE = {
@@ -81,7 +84,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "scrub_hub_project.wsgi.application"
-
+# Asyncronous support, for chat
+ASGI_APPLICATION = "scrub_hub_project.asgi.application"
+CHANNEL_LAYERS = {
+	"default": {
+		# The InMemory layer is good enough for our MVP, though not a good idea in production.
+		"BACKEND": "channels.layers.InMemoryChannelLayer"
+	}
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
