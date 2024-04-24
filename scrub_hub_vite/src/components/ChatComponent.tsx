@@ -2,45 +2,38 @@ import { useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 // TODO: Have actually good styles.
 import styles from './ChatComponent.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
+import { isMessageProps } from './ChatTypes';
 
-type MessageProps = {
+export type MessageProps = {
 	message: string,
 	username: string,
 	time: Date,
+	unconfirmed?: boolean,
 };
-/**
- * Checks if the given object is a MessageProps.
- * If it is a MessageProps except that time is a string (the way it is received from the server), it converts time to a Date.
- * @param obj The object to check and convert.
- */
-function isMessageProps(obj: Partial<MessageProps>): obj is MessageProps {
-	const canBeMessageProps = !!(
-		obj && obj.message && obj.username && obj.time &&
-		typeof obj.message === 'string' &&
-		typeof obj.username === 'string'
-	);
-	if (canBeMessageProps && typeof obj.time === 'string')
-		obj.time = new Date(obj.time as string);
-	return canBeMessageProps;
-}
-function MessageComponent({ message, username, time} : MessageProps) {
+function MessageComponent({ message, username, time, unconfirmed } : MessageProps) {
 	return <>
 		<text className={styles.messageUsername}>{username}</text>
-		<text className={styles.messageTime}>{time.toLocaleString()}</text>
+		{ unconfirmed
+			? <text>sending...</text>
+			: <text className={styles.messageTime}>{time.toLocaleString()}</text>
+		}
 		<p className={styles.message}>{message}</p>
 	</>
 }
 
 export type ChatProps = {
 	participants: string[],
+	messages: MessageProps[],
+	conversation_id: number,
 };
-export function ChatComponent({ participants }: ChatProps) {
-	const [messages, ] = useState<MessageProps[]>([]);
-	const addMessage = (nessage: MessageProps) => {
-		messages.push(nessage);
+export function ChatComponent({ participants, messages, conversation_id }: ChatProps) {
+	const [messagesState, ] = useState<MessageProps[]>(messages);
+
+	function addMessage(message: MessageProps) {
+		messagesState.push(message);
 	}
 
-	const { readyState, sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/`,
+	const { readyState, sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/${conversation_id}`,
 		{
 			onOpen: () => console.log('open'),
 			onClose: () => console.log('close'),
@@ -48,12 +41,14 @@ export function ChatComponent({ participants }: ChatProps) {
 				const data = JSON.parse(event.data);
 				if (isMessageProps(data)) {
 					addMessage(data);
+				} else if (typeof data.received === 'number') {
+					messagesState[data.received].unconfirmed = false;
 				} else {
-					console.log('not a message props');
+					console.log('invalid data received');
 					console.log(data);
 				}
 			},
-			shouldReconnect: (_) => false,
+			shouldReconnect: () => false,
 		}
 	);
 
@@ -70,11 +65,14 @@ export function ChatComponent({ participants }: ChatProps) {
 		if (!userMessage)
 			return;
 
-		const message: MessageProps = {
+		const message: MessageProps & { id: number } = {
 			message: userMessage,
 			username: 'You',
 			time: new Date(),
+			unconfirmed: true,
+			id: messagesState.length, // Track when it's been received.
 		};
+
 		sendJsonMessage(message);
 		addMessage(message);
 		setMessageInput('');
@@ -86,7 +84,7 @@ export function ChatComponent({ participants }: ChatProps) {
 	return <div className={styles.root}>
 		<h2>Participants: {participants.join(', ')}</h2>
 		<p>Status: {connectionStatus}</p>
-		{messages.map((m, i) => <MessageComponent key={i} {...m} />)}
+		{messagesState.map((m, i) => <MessageComponent key={i} {...m} />)}
 		<input id='messagebox' type='text' placeholder='message' value={userMessage}
 			onChange={(e) => setMessageInput(e.target.value)}
 			onKeyUp={(e) => { if (e.key === 'Enter') send() }}
