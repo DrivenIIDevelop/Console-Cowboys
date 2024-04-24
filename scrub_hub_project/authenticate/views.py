@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 # Create your views here.
 
+@ensure_csrf_cookie
 def login_view(request):
     if request.method == "POST":
         data = json.loads(request.body)
