@@ -1,14 +1,21 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render
 import datetime
 
 from .models import Conversation, Message
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import api_view
 
 # Create your views here.
+@api_view(['GET'])
 def conversation(request, conversation_id):
-	# TODO: Auth, and ensure user belongs to requested conversation
-	user_id = User.objects.get(username='chattest 1').id # TODO: Get user from request
+	user_id = request.user.id
+	if user_id is None:
+		return HttpResponseForbidden('You are not logged in.')
+	if not Conversation.available_to_user(conversation_id, user_id):
+		return HttpResponseBadRequest('The conversation does not exist or you are not a part of it.')
+
 	conversation = Conversation.objects.get(id=conversation_id)
 	oldest_to_look_for = datetime.datetime.now(datetime.UTC)
 	oldest_to_look_for -= datetime.timedelta(days=30)
@@ -28,8 +35,9 @@ def conversation(request, conversation_id):
 	}
 	return JsonResponse(data)
 
+@login_required(login_url='authenticate-login') # This might not be the best way to do this? Idk, but it's easy pz.
 def all_conversations(request):
-	user_id = User.objects.get(username='chattest 1').id # TODO: Get user from request
+	user_id = request.user.id
 	user_conversations = Conversation.objects.filter(participants__user__id=user_id).all()
 	context = {
 		'conversationListComponentProps': {

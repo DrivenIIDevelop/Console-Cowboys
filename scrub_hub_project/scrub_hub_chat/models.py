@@ -16,6 +16,10 @@ class Conversation(models.Model):
 		null=True,
 	)
 
+	@classmethod
+	def available_to_user(cls, conversation_id, user_id):
+		return Conversation.objects.filter(id=conversation_id, participants__user__id=user_id).count() == 1
+
 class Message(models.Model):
 	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
 	user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

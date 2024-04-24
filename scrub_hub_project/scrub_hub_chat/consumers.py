@@ -39,31 +39,35 @@ class ChatConsumer(GroupedConsumer):
 	This group will make it so that a user can have multiple tabs open and see notifications on all of them.
 	We do not have a group for the current conversation. Maybe this will change at some point.
 	"""
+	scope: dict
+
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.ignore = None
 
-	def get_user_id(self):
-		# Auth isn't implemented yet
-		# self.scope['user'] ... TODO
-		users = User.objects.filter(username='chattest 1')
-		if users.count() == 1:
-			self.user = users[0]
-		else:
-			raise Exception('Did not find test user.')
-
 	def get_users_in_conversation(self):
-		conversation = Conversation.objects.get(id=self.conversation_id)
 		users = []
-		for participant in conversation.participants.all():
-			users.append(str(participant.user.id))
+		query = Conversation.objects.filter(id=self.conversation_id)
+		if query.count() == 1:
+			conversation = query[0]
+			for participant in conversation.participants.all():
+				users.append(str(participant.user.id))
 		self.users_in_conversation = users
 
 
 	def connect(self):
-		self.get_user_id()
+		self.user = self.scope.get('user', None)
+		if self.user is None:
+			self.close(401) # This method has a "reason" parameter, but that reason is not visible to the client. Weird.
+			return
+
 		self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
 		self.get_users_in_conversation()
+		# Validate that this user is part of the conversation
+		if str(self.user.id) not in self.users_in_conversation:
+			self.close(403)
+			return
+
 		self.group_add(str(self.user.id))
 		self.accept()
 

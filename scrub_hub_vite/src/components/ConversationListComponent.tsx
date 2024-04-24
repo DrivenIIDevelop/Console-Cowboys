@@ -36,8 +36,8 @@ export default function ConversationListComponent({ conversations }: Conversatio
 	}
 
 	return <>
-		{conversations.map((c, i) => <div onClick={() => conversationClick(c.id)}>
-			<ConversastionComponent key={i} {...c} />
+		{conversations.map((c, i) => <div key={i} onClick={() => conversationClick(c.id)}>
+			<ConversastionComponent {...c} />
 		</div>)}
 		{activeConversation ? <ChatComponent {...activeConversation} /> : <></>}
 	</>

@@ -36,7 +36,10 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 	const { readyState, sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/${conversation_id}`,
 		{
 			onOpen: () => console.log('open'),
-			onClose: () => console.log('close'),
+			onClose: (e) => {
+				console.log('close');
+				console.log(e);
+			},
 			onMessage: (event) => {
 				const data = JSON.parse(event.data);
 				if (isMessageProps(data)) {

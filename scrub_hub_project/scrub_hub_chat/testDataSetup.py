@@ -12,8 +12,8 @@ if User.objects.filter(username__startswith='chattest ').count() != 0:
 	exit()
 
 print('\nCreating test users...')
-u1 = User(username='chattest 1'); u1.save()
-u2 = User(username='chattest 2'); u2.save()
+u1 = User(username='chattest 1', password='test'); u1.save()
+u2 = User(username='chattest 2', password='test'); u2.save()
 
 print('\nSetting up conversation...')
 c = Conversation()
