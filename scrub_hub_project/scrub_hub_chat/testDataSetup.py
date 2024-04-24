@@ -14,11 +14,6 @@ if User.objects.filter(username__startswith='chattest ').count() != 0:
 print('\nCreating test users...')
 u1 = User(username='chattest 1', password='test'); u1.save()
 u2 = User(username='chattest 2', password='test'); u2.save()
+u3 = User(username='chattest 3', password='test'); u3.save()
 
-print('\nSetting up conversation...')
-c = Conversation()
-c.save() # must save to give it an id, before participants can be added
-p1 = ConversationParticipant(user=u1); p1.save()
-p2 = ConversationParticipant(user=u2); p2.save()
-c.participants.set([p1, p2])
-c.save()
+# Not making conversations anymore, since there's a simple UI to do so.

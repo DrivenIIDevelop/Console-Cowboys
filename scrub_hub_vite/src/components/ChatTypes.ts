@@ -58,6 +58,11 @@ export function isConversationListProps(obj?: {[key: string]: unknown}): obj is 
 	return !!(
 		obj &&
 		obj.conversations instanceof Array &&
-		obj.conversations.every(isConversationProps)
+		obj.conversations.every(isConversationProps) &&
+		obj.available_users instanceof Array &&
+		obj.available_users.every((u) =>
+			typeof u.name === 'string' &&
+			typeof u.id === 'number'
+		)
 	);
 }

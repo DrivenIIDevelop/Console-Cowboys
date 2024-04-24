@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 // TODO: Have actually good styles.
 import styles from './ChatComponent.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
@@ -27,7 +27,9 @@ export type ChatProps = {
 	conversation_id: number,
 };
 export function ChatComponent({ participants, messages, conversation_id }: ChatProps) {
-	const [messagesState, ] = useState<MessageProps[]>(messages);
+	const [messagesState, setMsgs] = useState<MessageProps[]>(messages);
+	// Confusingly, the state won't get updated when we update the props. So we need an effect.
+	useEffect(() => setMsgs(messages), [messages]);
 
 	function addMessage(message: MessageProps) {
 		messagesState.push(message);
@@ -36,10 +38,7 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 	const { readyState, sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/${conversation_id}`,
 		{
 			onOpen: () => console.log('open'),
-			onClose: (e) => {
-				console.log('close');
-				console.log(e);
-			},
+			onClose: () => console.log('close'),
 			onMessage: (event) => {
 				const data = JSON.parse(event.data);
 				if (isMessageProps(data)) {
