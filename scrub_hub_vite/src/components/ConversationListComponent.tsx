@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { isChatProps } from './ChatTypes';
 import ChatComponent, { ChatProps } from './ChatComponent';
+import styles from './chat.module.css';
 
 export type ConversationProps = {
 	participants: string[],
@@ -53,13 +54,17 @@ export default function ConversationListComponent({ conversations, available_use
 		});
 	}
 
-	return <>
-		<h2>Existing conversations</h2>
-		{conversations.map((c, i) => <div key={i} onClick={() => openConversation(c.id)}>
-			<ConversastionComponent {...c} />
-		</div>)}
-		<h2>Start a conversation</h2>
-		{available_users.map((u, i) => <div key={i} onClick={() => startConversation(u.id)}>{u.name}</div>)}
-		{activeConversation ? <ChatComponent {...activeConversation} /> : <></>}
-	</>
+	return <div className={styles.root}>
+		<div className={styles.conversationList}>
+			<h2>Existing conversations</h2>
+			{conversations.map((c, i) => <div key={i} onClick={() => openConversation(c.id)}>
+				<ConversastionComponent {...c} />
+			</div>)}
+			<h2>Start a conversation</h2>
+			{available_users.map((u, i) => <div key={i} onClick={() => startConversation(u.id)}>{u.name}</div>)}
+		</div>
+		<div className={styles.chatArea}>
+			{activeConversation ? <ChatComponent {...activeConversation} /> : <></>}
+		</div>
+	</div>
 }

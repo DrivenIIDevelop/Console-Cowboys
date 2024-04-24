@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 // TODO: Have actually good styles.
-import styles from './ChatComponent.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
+import styles from './chat.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
 import { isMessageProps } from './ChatTypes';
 
 export type MessageProps = {
@@ -83,7 +83,7 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 	// Any tag selectors in the .module.css file would apply to the entire page.
 	// We get around this by giving the component a "root" element.
 	// Selector "button" changes to ".root button" and now only buttons inside this component are styled.
-	return <div className={styles.root}>
+	return <>
 		<h2>Participants: {participants.join(', ')}</h2>
 		<p>Status: {connectionStatus}</p>
 		{messagesState.map((m, i) => <MessageComponent key={i} {...m} />)}
@@ -92,7 +92,7 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 			onKeyUp={(e) => { if (e.key === 'Enter') send() }}
 		/>
 		<button type='button' onClick={send}>SEND</button>
-	</div>
+	</>
 }
 
 export default ChatComponent;

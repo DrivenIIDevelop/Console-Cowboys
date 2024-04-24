@@ -4,6 +4,8 @@
 
 .root {
 	max-width: 80vw;
+	width: 100vw;
+	display: flex;
 }
 
 .messageUsername {
@@ -18,4 +20,12 @@
 
 .message {
 	margin-block-start: 0.25rem;
+}
+
+.conversationList {
+	flex-grow: 1;
+}
+
+.chatArea {
+	flex-grow: 9;
 }
