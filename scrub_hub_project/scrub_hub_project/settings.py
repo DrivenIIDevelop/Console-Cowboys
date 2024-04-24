@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-xdyz6-npg4j@!0o$9n(73j1a1gqc#wkjfbcuu4d3r#b8o59=tw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '0.0.0.0']
+ALLOWED_HOSTS = ['localhost', '0.0.0.0', '127.0.0.1']
 
 
 # Application definition
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 	"anymail",
 	"channels", # Async support (used for websockets in chat)
 	"scrub_hub_chat",
+	"authenticate",
 ]
 
 DJANGO_VITE = {
@@ -64,6 +65,7 @@ MIDDLEWARE = [
 	"django.middleware.clickjacking.XFrameOptionsMiddleware",
 	"corsheaders.middleware.CorsMiddleware",
 ]
+
 
 ROOT_URLCONF = "scrub_hub_project.urls"
 
@@ -132,7 +134,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+
 if DEBUG:
 	STATICFILES_DIRS = [
 		BASE_DIR / "../scrub_hub_vite/public",
@@ -160,6 +163,17 @@ CORS_ORIGIN_ALLOW_ALL = True # Use this for development only
 
 EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 DEFAULT_FROM_EMAIL = "consolecowboytest@gmail.com"
-SERVER_EMAIL = "consolecowboytest@gmail.com" 
+SERVER_EMAIL = "consolecowboytest@gmail.com"
 
 # End of Email Functionality
+
+# Security settings, could be used for protecting cookies
+CSRF_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SAMESITE = 'Strict'
+
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_HTTPONLY = True
+
+# For production, replace corresponding lines above to True
+# CSRF_COOKIE_HTTPONLY = True
+# SESSION_COOKIE_HTTPONLY = True
