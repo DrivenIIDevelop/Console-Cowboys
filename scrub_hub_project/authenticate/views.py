@@ -46,6 +46,7 @@ def dashboard_view(request):
     context = { 'username': request.user.username }
     return render(request, 'authenticate/dashboard.html', context)
 
+@ensure_csrf_cookie
 def register_view(request):
     if request.method == "POST":
         data = json.loads(request.body)
