@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import Cookies from 'universal-cookie';
 
 const cookies = new Cookies();
@@ -8,7 +7,6 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   //Login the user
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
@@ -25,13 +23,15 @@ const Login = () => {
     })
     .then(response => {
 		if (!response.ok) {
-		  throw new Error('Failed to fetch user data');
+      throw new Error('Failed to fetch user data');
 		}
 		return response.json();
-	  })
+  })
     .then(data => {
       if (data.detail === "Succesfully logged in!") { //Can change later in API and match here
-        navigate("/dashboard");
+        //Redirect instead of react navigate
+        // navigate("/dashboard");
+        window.location.href = `${location.protocol}//${location.host}/authenticate/dashboard`;
       } else {
         setError("Login failed, please check your credentials.");
       }
@@ -51,7 +51,8 @@ const Login = () => {
         <button type="submit">Login</button>
         {error && <p>{error}</p>}
       </form>
-      <Link to="/register">Need an account? Register here.</Link>
+      {/*<Link to="/register">Need an account? Register here.</Link>*/}
+      Need an account? <a href='/authenticate/register'>Register here.</a>
     </div>
   );
 };

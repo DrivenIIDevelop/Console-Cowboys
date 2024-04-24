@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import Cookies from 'universal-cookie';
 
 const cookies = new Cookies();
@@ -9,7 +8,6 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   //Register the user via endpoint
   const handleRegister = (event: React.FormEvent<HTMLFormElement>) => {
@@ -29,7 +27,8 @@ const Register = () => {
       console.log(data);
       if (data.detail === "User successfully registered") { // Can change in the API later on and match here
         alert('Registration successful. You can now log in.');
-        navigate("/login");
+        // navigate("/login");
+        window.location.href = `${location.protocol}//${location.host}/authenticate/login`;
       } else { //Better way to handle this error if unable to register?
         setError(data.detail || "Registration failed. Please check your information.");
       }
@@ -50,7 +49,8 @@ const Register = () => {
         <button type="submit">Register</button>
         {error && <p>{error}</p>}
       </form>
-      <Link to="/login">Already have an account? Log in here.</Link>
+      {/* <Link to="/login">Already have an account? Log in here.</Link> */}
+      Already have an account?<a href='/authenticate/login'>Login Here</a>
     </div>
   );
 };

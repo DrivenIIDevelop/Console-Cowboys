@@ -66,13 +66,19 @@ MIDDLEWARE = [
 	"corsheaders.middleware.CorsMiddleware",
 ]
 
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",
+#     "http://127.0.0.1:5173",
+# ]
+
+# CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']
+
 ROOT_URLCONF = "scrub_hub_project.urls"
 
 TEMPLATES = [
 	{
 		"BACKEND": "django.template.backends.django.DjangoTemplates",
-		# "DIRS": [],
-		"DIRS": [BASE_DIR / "../scrub_hub_vite/dist"], #Get the index.html and assets
+		"DIRS": [],
 		"APP_DIRS": True,
 		"OPTIONS": {
 			"context_processors": [
@@ -138,9 +144,8 @@ STATIC_URL = "/static/"
 
 if DEBUG:
 	STATICFILES_DIRS = [
-		# BASE_DIR / "../scrub_hub_vite/public",
-		# BASE_DIR / "../scrub_hub_vite",
-		BASE_DIR / "../scrub_hub_vite/dist", #Using dist folder
+		BASE_DIR / "../scrub_hub_vite/public",
+		BASE_DIR / "../scrub_hub_vite",
 	]
 else:
 	STATICFILES_DIRS = [

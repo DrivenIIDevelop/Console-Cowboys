@@ -9,19 +9,22 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 # Create your views here.
 
-@require_POST
 def login_view(request):
-    data = json.loads(request.body)
-    username = data.get("username")
-    password = data.get("password")
-    
-    if username is None or password is None:
-        return JsonResponse({"detail":"Please provide username and password"})
-    user = authenticate(username=username, password=password)
-    if user is None:
-        return JsonResponse({"detail":"Invalid credentials"}, status=400)
-    login(request, user)
-    return JsonResponse({"detail": "Succesfully logged in!"})
+    if request.method == "POST":
+        data = json.loads(request.body)
+        username = data.get("username")
+        password = data.get("password")
+        
+        if username is None or password is None:
+            return JsonResponse({"detail":"Please provide username and password"})
+        user = authenticate(username=username, password=password)
+        if user is None:
+            return JsonResponse({"detail":"Invalid credentials"}, status=400)
+        login(request, user)
+        return JsonResponse({"detail": "Succesfully logged in!"})
+    elif request.method == "GET":
+        return render(request, 'authenticate/login.html')
+
 
 def logout_view(request):
     if not request.user.is_authenticated:
@@ -38,23 +41,27 @@ def session_view(request):
 
 def dashboard_view(request):
     if not request.user.is_authenticated:
-        return JsonResponse({"isAuthenticated": False})
-    return JsonResponse({"username":request.user.username})
+        # return JsonResponse({"isAuthenticated": False})
+        return render(request, 'authenticate/login.html')
+    context = { 'username': request.user.username }
+    return render(request, 'authenticate/dashboard.html', context)
 
-@require_POST
 def register_view(request):
-    data = json.loads(request.body)
-    username = data.get("username")
-    password = data.get("password")
-    email = data.get("email")
+    if request.method == "POST":
+        data = json.loads(request.body)
+        username = data.get("username")
+        password = data.get("password")
+        email = data.get("email")
 
-    if not all([username, password, email]):
-        return JsonResponse({"detail": "Missing information"}, status=400)
+        if not all([username, password, email]):
+            return JsonResponse({"detail": "Missing information"}, status=400)
 
-    if User.objects.filter(username=username).exists():
-        return JsonResponse({"detail": "Username already taken"}, status=400)
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"detail": "Username already taken"}, status=400)
 
-    user = User.objects.create_user(username=username, email=email, password=password)
-    user.save()
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.save()
 
-    return JsonResponse({"detail": "User successfully registered"}, status=201)
+        return JsonResponse({"detail": "User successfully registered"}, status=201)
+    elif request.method == "GET":
+        return render(request, 'authenticate/register.html')

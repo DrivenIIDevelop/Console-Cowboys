@@ -28,7 +28,7 @@ def index_view(request):
 urlpatterns = [
 	path("admin/", admin.site.urls),
 	
-	path('', include('authenticate.urls')), #may need a different pathing strategy later to render other apps as well
+	path('authenticate/', include('authenticate.urls')), #may need a different pathing strategy later to render other apps as well
 	path('', include('scrub_hub_frontend.urls')),
 	path('api/', include('email_app.urls')),
 	path('notes/', include('patient_notes.urls')),
