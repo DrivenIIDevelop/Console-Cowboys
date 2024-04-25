@@ -1,13 +1,15 @@
 from django.shortcuts import render
 
-# Create your views here.
 import json
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_POST
+# from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 # Create your views here.
+
+def home_view(request):
+    return render(request, 'authenticate/home.html')
 
 @ensure_csrf_cookie
 def login_view(request):
@@ -34,11 +36,11 @@ def logout_view(request):
     return JsonResponse({"detail":"Succesfully logged out!"})
 
 
-@ensure_csrf_cookie
-def session_view(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"isAuthenticated": False})
-    return JsonResponse({"isAuthenticated": True})
+# @ensure_csrf_cookie
+# def session_view(request):
+#     if not request.user.is_authenticated:
+#         return JsonResponse({"isAuthenticated": False})
+#     return JsonResponse({"isAuthenticated": True})
 
 def dashboard_view(request):
     if not request.user.is_authenticated:

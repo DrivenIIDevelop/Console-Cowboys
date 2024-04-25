@@ -29,8 +29,7 @@ const Login = () => {
   })
     .then(data => {
       if (data.detail === "Succesfully logged in!") { //Can change later in API and match here
-        //Redirect instead of react navigate
-        // navigate("/dashboard");
+        
         window.location.href = `${location.protocol}//${location.host}/authenticate/dashboard`;
       } else {
         setError("Login failed, please check your credentials.");
@@ -51,7 +50,6 @@ const Login = () => {
         <button type="submit">Login</button>
         {error && <p>{error}</p>}
       </form>
-      {/*<Link to="/register">Need an account? Register here.</Link>*/}
       Need an account? <a href='/authenticate/register'>Register here.</a>
     </div>
   );

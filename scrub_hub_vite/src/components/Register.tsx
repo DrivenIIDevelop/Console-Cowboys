@@ -27,7 +27,6 @@ const Register = () => {
       console.log(data);
       if (data.detail === "User successfully registered") { // Can change in the API later on and match here
         alert('Registration successful. You can now log in.');
-        // navigate("/login");
         window.location.href = `${location.protocol}//${location.host}/authenticate/login`;
       } else { //Better way to handle this error if unable to register?
         setError(data.detail || "Registration failed. Please check your information.");
@@ -49,7 +48,6 @@ const Register = () => {
         <button type="submit">Register</button>
         {error && <p>{error}</p>}
       </form>
-      {/* <Link to="/login">Already have an account? Log in here.</Link> */}
       Already have an account?<a href='/authenticate/login'>Login Here</a>
     </div>
   );
