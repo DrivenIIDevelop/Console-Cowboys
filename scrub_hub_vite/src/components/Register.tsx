@@ -12,13 +12,17 @@ const Register = () => {
   const [phone_number, setPhoneNumber] = useState('');
   const [employee_id, setEmployeeId] = useState('');
   const [registration_code, setRegistrationCode] = useState('');
-  // const [checkbox, setCheckBox] = useState(false);
+  const [checkbox, setCheckBox] = useState(false);
   const [error, setError] = useState('');
 
   //Register the user via endpoint
   const handleRegister = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (!checkbox){
+      setError("Please accept the terms and conditions")
+      return;
+    }
     fetch("/authenticate/register/", {
       method: "POST",
       headers: {
@@ -58,6 +62,14 @@ const Register = () => {
         <input type="text" name="employee_id" value={employee_id} onChange={e => setEmployeeId(e.target.value)} placeholder="Employee ID" required />
         <input type="text" name="registration_code" value={registration_code} onChange={e => setRegistrationCode(e.target.value)} placeholder="Registration Code" required />
 
+        <label>
+          <input
+            type="checkbox"
+            checked={checkbox}
+            onChange={(e) => setCheckBox(e.target.checked)}
+          />
+          I agree with Terms and Conditions
+        </label>
         <button type="submit">Register</button>
         {error && <p>{error}</p>}
       </form>
