@@ -4,7 +4,7 @@ import Cookies from 'universal-cookie';
 const cookies = new Cookies();
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -19,7 +19,7 @@ const Login = () => {
         "X-CSRFToken": cookies.get("csrftoken"),
       },
       credentials: "same-origin",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, password }),
     })
     .then(response => {
 		if (!response.ok) {
@@ -45,7 +45,7 @@ const Login = () => {
     <div>
       <h2>Login</h2>
       <form onSubmit={handleLogin}>
-        <input type="text" name="username" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required />
+        <input type="text" name="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required />
         <input type="password" name="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required />
         <button type="submit">Login</button>
         {error && <p>{error}</p>}

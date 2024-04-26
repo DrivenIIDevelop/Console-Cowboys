@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from . models import Profile
+# from . models import Profile
 import json
 
 from django.contrib.auth import authenticate, login, logout
@@ -17,12 +17,12 @@ def home_view(request):
 def login_view(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        username = data.get("username")
+        email = data.get("email")
         password = data.get("password")
         
-        if username is None or password is None:
+        if email is None or password is None:
             return JsonResponse({"detail":"Please provide username and password"})
-        user = authenticate(username=username, password=password)
+        user = authenticate(email=email, password=password)
         if user is None:
             return JsonResponse({"detail":"Invalid credentials"}, status=400)
         login(request, user)

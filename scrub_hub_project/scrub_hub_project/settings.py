@@ -177,3 +177,5 @@ SESSION_COOKIE_HTTPONLY = True
 # For production, replace corresponding lines above to True
 # CSRF_COOKIE_HTTPONLY = True
 # SESSION_COOKIE_HTTPONLY = True
+
+AUTH_USER_MODEL = "authenticate.CustomUser"
