@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 	"channels", # Async support (used for websockets in chat)
 	"scrub_hub_chat",
 	"authenticate",
+	"email_app",
 ]
 
 DJANGO_VITE = {

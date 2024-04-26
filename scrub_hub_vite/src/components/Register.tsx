@@ -12,6 +12,7 @@ const Register = () => {
   const [phone_number, setPhoneNumber] = useState('');
   const [employee_id, setEmployeeId] = useState('');
   const [registration_code, setRegistrationCode] = useState('');
+  // const [checkbox, setCheckBox] = useState(false);
   const [error, setError] = useState('');
 
   //Register the user via endpoint
