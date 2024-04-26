@@ -11,8 +11,8 @@ const Home = () => {
 				<p>
 					Join our platform and experience seamless communication and collaboration among medical professionals.
 				</p>
-				<button style={{ marginRight: '10px' }} onClick={() => window.location.href = '/authenticate/login'}>Login Here</button>
-				<button onClick={() => window.location.href = '/authenticate/register'}>Register here</button>
+				<button style={{ marginRight: '10px' }} onClick={() => window.location.href = '/authenticate/login'}>Login</button>
+				<button onClick={() => window.location.href = '/authenticate/register'}>Register</button>
 				</div>
 			</div>
 			<div style={{ flex: 1 }}>
