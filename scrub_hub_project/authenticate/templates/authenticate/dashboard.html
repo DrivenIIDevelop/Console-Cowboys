@@ -11,7 +11,7 @@
 		The ID of the script tag is "_DjangoData_", making it's contents accessible via document.getElementById.
 		There's a helper method in scrub_hub_vite/src/GetScriptData.ts
 	-->
-	    {{ username|json_script:"_DjangoData_" }}
+	    {{ first_name|json_script:"_DjangoData_" }}
     </head>
     <body>
         <div id="root"></div>

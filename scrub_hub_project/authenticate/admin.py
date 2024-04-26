@@ -10,6 +10,9 @@ class CustomUserAdmin(UserAdmin):
 		"email",
 		"first_name",
 		"last_name",
+		"phone_number",
+		"registration_code",
+		"employee_id",
 		"is_staff",
 		"is_active",
 	)
@@ -25,7 +28,10 @@ class CustomUserAdmin(UserAdmin):
 			"first_name", 
 			"last_name",
 			"email",
-			"password")}
+			"password",
+			"phone_number",
+			"registration_code",
+			"employee_id")}
 		),
 		("Permissions", {"fields": (
 			"is_staff",
@@ -41,6 +47,9 @@ class CustomUserAdmin(UserAdmin):
 			"email",
 			"password1",
 			"password2",
+			"phone_number",
+			"registration_code",
+			"employee_id",
 			"is_staff",
 			"is_active",
 			"groups",

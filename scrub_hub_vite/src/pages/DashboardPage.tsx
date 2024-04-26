@@ -24,7 +24,7 @@ if (!container.reactRoot) {
 				Unfortunately, I haven't found anything that verifies the type automatically.
 				You should probably implement code to validate important props.
 			*/}
-			<Dashboard username={data}/>
+			<Dashboard first_name={data}/>
 		</React.StrictMode>
 	)
 }
