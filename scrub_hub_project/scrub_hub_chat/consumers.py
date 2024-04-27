@@ -7,7 +7,7 @@ from channels.generic.websocket import JsonWebsocketConsumer
 from asgiref.sync import async_to_sync
 from channels.layers import InMemoryChannelLayer
 
-from django.contrib.auth.models import User
+from authenticate.models import CustomUser
 from .models import Conversation, Message
 
 # "We recommend that you write SyncConsumers by default": https://channels.readthedocs.io/en/stable/topics/consumers.html#basic-layout
@@ -40,6 +40,7 @@ class ChatConsumer(GroupedConsumer):
 	We do not have a group for the current conversation. Maybe this will change at some point.
 	"""
 	scope: dict
+	user: CustomUser | None
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -81,7 +82,7 @@ class ChatConsumer(GroupedConsumer):
 
 		message = {
 			'message': msg_txt,
-			'username': self.user.username,
+			'username': self.user.get_full_name(),
 			'time': str(datetime.datetime.now(datetime.UTC)),
 			'type': 'chat_message', # Tells channels what method to use to handle the group message.
 		}

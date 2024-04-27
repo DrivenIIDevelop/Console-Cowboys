@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 	"channels", # Async support (used for websockets in chat)
 	"scrub_hub_chat",
 	"authenticate",
+	"email_app",
 ]
 
 DJANGO_VITE = {
@@ -177,3 +178,5 @@ SESSION_COOKIE_HTTPONLY = True
 # For production, replace corresponding lines above to True
 # CSRF_COOKIE_HTTPONLY = True
 # SESSION_COOKIE_HTTPONLY = True
+
+AUTH_USER_MODEL = "authenticate.CustomUser"

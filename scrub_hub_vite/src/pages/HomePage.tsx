@@ -3,9 +3,7 @@ import 'vite/modulepreload-polyfill';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import '../index.css'
-import GetScriptData from '../GetScriptData.ts';
-import Dashboard from '../components/Dashboard.tsx';
-
+import Home from '../components/Home.tsx';
 
 // Vite's HMR apparently doesn't work super well with django-vite.
 // We check if the root has already been created. If so, we don't need to re-create or re-render here.
@@ -13,9 +11,6 @@ import Dashboard from '../components/Dashboard.tsx';
 const container: HTMLElement & { reactRoot?: ReactDOM.Root } = document.getElementById('root')!;
 if (!container.reactRoot) {
 	const root = container.reactRoot = ReactDOM.createRoot(container);
-	const data = GetScriptData();
-	if (typeof data !== 'string')
-		throw 'Invalid data';
 	root.render(
 		<React.StrictMode>
 			{/*
@@ -24,7 +19,7 @@ if (!container.reactRoot) {
 				Unfortunately, I haven't found anything that verifies the type automatically.
 				You should probably implement code to validate important props.
 			*/}
-			<Dashboard first_name={data}/>
+			<Home />
 		</React.StrictMode>
 	)
 }

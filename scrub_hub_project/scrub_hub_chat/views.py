@@ -3,7 +3,7 @@ from django.shortcuts import render
 import datetime
 
 from .models import Conversation, ConversationParticipant, Message
-from django.contrib.auth.models import User
+from authenticate.models import CustomUser as User
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view
 
@@ -14,11 +14,11 @@ def get_conversation_data(conversation, user_id):
 		.filter(conversation__id=conversation.id, date__gte=oldest_to_look_for) \
 		.order_by('-date')[:20]
 	data = {
-		'participants': [p.user.username for p in conversation.participants.exclude(user__id=user_id).all()],
+		'participants': [p.user.get_full_name() for p in conversation.participants.exclude(user__id=user_id).all()],
 		'messages': [
 			{
 				'message': m.text.decode(),
-				'username': m.user.username,
+				'username': m.user.get_full_name(),
 				'time': str(m.date),
 			} for m in messages[::-1]
 		],
@@ -66,7 +66,7 @@ def all_conversations(request):
 
 	existing_conversations = [
 		{
-			'participants': [p.user.username for p in c.participants.exclude(user__id=user_id).all()],
+			'participants': [p.user.get_full_name() for p in c.participants.exclude(user__id=user_id).all()],
 			'last_message_time': str(c.last_message_date or datetime.datetime.now(datetime.UTC)),
 			'id': c.id,
 		} for c in user_conversations
@@ -77,7 +77,7 @@ def all_conversations(request):
 	for user in User.objects.all():
 		if user.id != user_id and user_conversations.filter(participants__user__id=user.id).count() == 0:
 			available_users.append({
-				'name': user.username,
+				'name': user.get_full_name(),
 				'id': user.id
 			})
 
