@@ -10,9 +10,16 @@ class Physician(models.Model):
         return self.name
 
 class Patient(models.Model):
+    ACTIVE = 'Active'
+    INACTIVE = 'Inactive'
     LOW = 'Low'
     MEDIUM = 'Medium'
     HIGH = 'High'
+
+    COVERAGE_CHOICES = [
+        (ACTIVE, 'Active'),
+        (INACTIVE, 'Inactive')
+    ]
 
     RISK_CHOICES = [
         (LOW, 'Low'),
@@ -22,6 +29,7 @@ class Patient(models.Model):
     name = models.CharField(max_length=100)
     age = models.IntegerField(blank=True, null=True)
     risk_level = models.CharField(max_length=10, choices=RISK_CHOICES, default=RISK_CHOICES[0][0])
+    coverage_status = models.CharField(max_length=10, choices=COVERAGE_CHOICES, default = COVERAGE_CHOICES[0][0])
     
     def __str__(self):
     	return self.name

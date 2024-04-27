@@ -1,8 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import PatientReport, Patient
 from .forms import PatientReportForm, NewPatientForm
+from django.http import JsonResponse
 
 # Create your views here.
+
+def patient_list_api(request):
+	patients = Patient.objects.all()
+	data = [{'id': patient.id, 'name': patient.name, 'risk_level': patient.risk_level, 'coverage_status': patient.coverage_status} for patient in patients]
+	return JsonResponse(data, safe=False)
 
 def create_patient(request):
 	if request.method == 'POST':
