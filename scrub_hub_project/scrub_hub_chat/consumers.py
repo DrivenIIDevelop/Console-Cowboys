@@ -7,7 +7,6 @@ from channels.generic.websocket import JsonWebsocketConsumer
 from asgiref.sync import async_to_sync
 from channels.layers import InMemoryChannelLayer
 
-from django.contrib.auth.models import User
 from .models import Conversation, Message
 
 # "We recommend that you write SyncConsumers by default": https://channels.readthedocs.io/en/stable/topics/consumers.html#basic-layout
