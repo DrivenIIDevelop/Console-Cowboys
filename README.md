@@ -55,3 +55,33 @@ The current plan for the architecture seems to be:
 * Use React + TypeScript for the front end.
 * Use Django and SQL for the backend.
 	* Should we install a SQL server, or can we use SQLite (which Djando projects use by default)?
+
+## Tailwind CSS
+This is to have a standard CSS styling for our application. Tailwind provides a cleaner and fast way to style components.
+
+https://tailwindcss.com/docs/guides/create-react-app
+Followed the above link to set up Tailwind CSS.
+
+You can install TailwindCSS Intellisense extension to help with autocomplete and syntax. (Prettier is another option as well, or both)
+
+Configuration: https://tailwindcss.com/docs/configuration 
+You can also specify specific parameters for your whole project in tailwind.config.js in theme: https://tailwindcss.com/docs/theme
+such as colors, or screen size definitions.
+
+You can add specific values to your components here, such as <div class="top-[117px]">
+https://tailwindcss.com/docs/adding-custom-styles
+
+But really, you don't need to modify the index.css class, usually you would just
+specify it in the code as shown below (examples given):
+<div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
+  <div class="md:flex">
+    <div class="md:shrink-0">
+      <img class="h-48 w-full object-cover md:h-full md:w-48" src="/img/building.jpg" alt="Modern building architecture">
+    </div>
+    <div class="p-8">
+      <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">Company retreats</div>
+      <a href="#" class="block mt-1 text-lg leading-tight font-medium text-black hover:underline">Incredible accommodation for your team</a>
+      <p class="mt-2 text-slate-500">Looking to take your team away on a retreat to enjoy awesome food and take in some sunshine? We have a list of places to do just that.</p>
+    </div>
+  </div>
+</div>
