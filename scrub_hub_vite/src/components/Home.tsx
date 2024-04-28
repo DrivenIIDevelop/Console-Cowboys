@@ -4,20 +4,20 @@ import "../index.css"
 
 const Home = () => {
 	return(
-		<div className="flex justify-between columns-2">
-			<div>
-				<img src={scrubHubLogo} alt="Scrub Hub Logo" />
-				<h2>Streamline Communication and Collaboration for Medical Practitioners</h2>
+		<div className="flex justify-between">
+			<div className="ml-16">
+				<img className="justify-center" src={scrubHubLogo} alt="Scrub Hub Logo" />
+				<h2 className="font-fira-condensed font-bold text-[48px]">Streamline <br></br>Communication and<br></br> Collaboration for <br></br>Medical Practitioners</h2>
 				<div>
-				<p className="text-red-500">
-					Join our platform and experience seamless communication and collaboration among medical professionals.
+				<p className="font-fira-condensed text-[26px] mt-5 mb-5">
+					Join our platform and experience seamless<br></br> communication and collaboration among medical<br></br> professionals.
 				</p>
-				<button style={{ marginRight: '10px' }} onClick={() => window.location.href = '/authenticate/login'}>Login</button>
+				<button className=" mr-10" onClick={() => window.location.href = '/authenticate/login'}>Login</button>
 				<button onClick={() => window.location.href = '/authenticate/register'}>Register</button>
 				</div>
 			</div>
 			<div>
-				<img src={scrubPeople} alt="Scrub People" />
+				<img className= "" src={scrubPeople} alt="Scrub People" />
 			</div>
 		</div>
 	)
