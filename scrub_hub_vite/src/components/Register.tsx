@@ -50,7 +50,7 @@ const Register = () => {
 
   return (
     <div>
-      <h2>Register</h2>
+      <h2>Registration</h2>
       <form onSubmit={handleRegister}>
         <input type="email" name="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required />
         <input type="password" name="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required />
@@ -73,7 +73,7 @@ const Register = () => {
         <button type="submit">Register</button>
         {error && <p>{error}</p>}
       </form>
-      Already have an account?<a href='/authenticate/login'>Login Here</a>
+      Already have an account? <a href='/authenticate/login'>Sign in</a>
     </div>
   );
 };

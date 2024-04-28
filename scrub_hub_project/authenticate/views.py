@@ -28,6 +28,7 @@ def login_view(request):
         login(request, user)
         return JsonResponse({"detail": "Succesfully logged in!"})
     elif request.method == "GET":
+        #Add condition for if already logged in then go to dashboard? Maybe might not need
         return render(request, 'authenticate/login.html')
 
 
