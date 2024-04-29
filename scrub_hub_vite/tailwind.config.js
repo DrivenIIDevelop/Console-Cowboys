@@ -1,8 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./src/**/*.{js,jsx,ts,tsx}",],
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'fira-condensed': ['"Fira Sans Condensed"', 'sans-serif'] // Fallback to a generic sans-serif
+      }
+    },
   },
   plugins: [],
 }
