@@ -1,9 +1,5 @@
-.root button {
-	background-color: lightgreen;
-}
-
 .root {
-	max-width: 80vw;
+	max-height: 100%;
 	width: 100vw;
 	display: flex;
 }
@@ -12,20 +8,4 @@
 	font-weight: bold;
 	margin-inline-end: 2em;
 	margin-block-end: 0;
-}
-
-.messageTime {
-	color: gray;
-}
-
-.message {
-	margin-block-start: 0.25rem;
-}
-
-.conversationList {
-	flex-grow: 1;
-}
-
-.chatArea {
-	flex-grow: 9;
 }

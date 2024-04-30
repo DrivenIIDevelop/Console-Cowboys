@@ -1,11 +1,11 @@
-import React, {useState} from 'react'
+import {useState} from 'react'
 //import menu, home, mail, calendar, and logout icons
 import { CiMenuBurger, CiHome, CiMail, CiCalendar, CiLogout, CiSearch } from "react-icons/ci"
 //import add person icon
 import { GoPersonAdd } from "react-icons/go"
 // import chat icon
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5"
-//still need tot import notification bell 
+//still need tot import notification bell
 //link to other components, if need to scroll
 // import {Link} from 'react-scroll'
 
@@ -16,7 +16,7 @@ export default function Navigation() {
     return (
         <div>
             {/* side navigation menu */}
-            <div className='absolute top-0 left-0 w-[100px] h-screen bg-[#63C7B2] flex flex-col items-center rounded-r-xl'>
+            <div className='top-0 left-0 w-[100px] h-screen bg-[#63C7B2] flex flex-col items-center rounded-r-xl'>
                 <ul>
                     <li className='pt-[30px] pb-[200px]'>
                         <CiMenuBurger size={30}/>
