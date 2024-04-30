@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import {useState} from 'react'
 //import menu, home, mail, calendar, and logout icons
 import { CiMenuBurger, CiHome, CiMail, CiCalendar, CiLogout, CiSearch } from "react-icons/ci"
 //import add person icon

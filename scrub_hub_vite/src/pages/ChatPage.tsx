@@ -6,7 +6,7 @@ import '../index.css';
 import GetScriptData from '../GetScriptData.ts';
 import ConversationListComponent from '../components/ConversationListComponent.tsx';
 import { isConversationListProps } from '../components/ChatTypes.ts';
-import Navigation from '../components/Navigation.tsx';
+import PageWrapper from '../components/PageWrapper.tsx';
 
 const container: HTMLElement & { reactRoot?: ReactDOM.Root } = document.getElementById('root')!;
 if (!container.reactRoot) {
@@ -17,10 +17,9 @@ if (!container.reactRoot) {
 
 	root.render(
 		<React.StrictMode>
-			<div className="flex max-h-screen">
-				<Navigation />
+			<PageWrapper>
 				<ConversationListComponent {...props} />
-			</div>
+			</PageWrapper>
 		</React.StrictMode>
 	)
 }
