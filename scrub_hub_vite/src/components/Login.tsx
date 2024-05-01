@@ -11,36 +11,36 @@ const Login = () => {
   const [error, setError] = useState('');
   const [checkbox, setCheckBox] = useState(false);
   //Login the user
-  const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    try {
+      const response = await fetch("/authenticate/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": cookies.get("csrftoken"),
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ email, password }),
+      });
 
-    fetch("/authenticate/login/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": cookies.get("csrftoken"),
-      },
-      credentials: "same-origin",
-      body: JSON.stringify({ email, password }),
-    })
-    .then(response => {
-		if (!response.ok) {
-      throw new Error('Failed to fetch user data');
-		}
-		return response.json();
-  })
-    .then(data => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const data = await response.json();
       if (data.detail === "Succesfully logged in!") { //Can change later in API and match here
         
         window.location.href = `${location.protocol}//${location.host}/authenticate/dashboard`;
       } else {
         setError("Username or password did not match.");
       }
-    })
-    .catch(err => {
-      console.error('Error:', err);
+    }
+    
+    catch(error) {
+      console.error('Error:', error);
       setError("Login failed, please check your credentials.");
-    });
+    }
   };
 
   return (
@@ -57,12 +57,12 @@ const Login = () => {
           <div className="text-gray-500/75 font-semibold">Login your account in seconds</div>
           
           <form className="space-y-5" onSubmit={handleLogin}>
-            <input type="email" name="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" required className="block w-full rounded-md border-0 py-2 pl-3 shadow-sm ring-2 ring-inset ring-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 leading-9 bg-gray-200/60 placeholder:text-gray-500 placeholder:font-semibold"/>
-            <input type="password" name="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required className="block w-full rounded-md border-0 py-2 pl-3 shadow-sm ring-2 ring-inset ring-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 leading-9 bg-gray-200/60 placeholder:text-gray-500 placeholder:font-semibold"/>
+            <input type="email" name="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" required className="block w-full rounded-md border-0 py-2 pl-3 shadow-sm ring-2 ring-inset ring-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 leading-9 bg-[#F1F1F1] placeholder:text-gray-500 placeholder:font-semibold"/>
+            <input type="password" name="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required className="block w-full rounded-md border-0 py-2 pl-3 shadow-sm ring-2 ring-inset ring-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 leading-9 bg-[#F1F1F1] placeholder:text-gray-500 placeholder:font-semibold"/>
             <div className="flex items-center justify-between mb-24 font-semibold">
               <label>
                 <input
-                  className="h-5 w-5 rounded accent-[#63C7B2] border-0 bg-transparent text-transparent focus-within:hidden"
+                  className="h-5 w-5 rounded accent-[#63C7B2]"
                   type="checkbox"
                   checked={checkbox}
                   onChange={(e) => setCheckBox(e.target.checked)}
@@ -73,14 +73,11 @@ const Login = () => {
             </div>
             <div className="pt-10">
               <button className="bg-[#63C7B2] hover:bg-[#63C7B2]/90 text-white w-full py-2 px-6 rounded-md font-bold" type="submit">Login</button>
+              <span className="text-gray-500">Don't have an account? </span><a className="font-semibold" href='/authenticate/register'>Sign up</a>
+              {error && <p className="text-red-500">{error}</p>}
             </div>
-            
           </form>
 
-          <div className="flex-shrink-0">
-            <span className="text-gray-500">Don't have an account? </span><a className="font-semibold" href='/authenticate/register'>Sign up</a>
-            {error && <p className="text-red-500">{error}</p>}
-          </div>
         </div>
       </div>
     </div>
