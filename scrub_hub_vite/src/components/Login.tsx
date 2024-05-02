@@ -60,7 +60,7 @@ const Login = () => {
             <input type="email" name="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" required className="block w-full rounded-md border-0 py-2 pl-3 shadow-sm ring-2 ring-inset ring-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 leading-9 bg-[#F1F1F1] placeholder:text-gray-500 placeholder:font-semibold"/>
             <input type="password" name="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required className="block w-full rounded-md border-0 py-2 pl-3 shadow-sm ring-2 ring-inset ring-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 leading-9 bg-[#F1F1F1] placeholder:text-gray-500 placeholder:font-semibold"/>
             <div className="flex items-center justify-between mb-24 font-semibold">
-              <label>
+              <label className="flex items-center">
                 <input
                   className="h-5 w-5 rounded accent-[#63C7B2]"
                   type="checkbox"
