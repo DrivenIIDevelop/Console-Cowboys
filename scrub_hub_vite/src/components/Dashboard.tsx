@@ -9,25 +9,26 @@ type DashboardProps = {
 const Dashboard = ({ first_name }: DashboardProps) => {
 
   //Logout the user
-  const handleLogout = () => {
-    fetch("/authenticate/logout/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": cookies.get("csrftoken"),
-      },
-      credentials: "same-origin",
-    })
-    .then(response => {
+  const handleLogout = async () => {
+    try
+    {
+      const response = await fetch("/authenticate/logout/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": cookies.get("csrftoken"),
+        },
+        credentials: "same-origin",
+      });
       if (response.ok) {
         window.location.href = `${location.protocol}//${location.host}/authenticate/login`;
       } else {
         throw new Error('Failed to logout');
       }
-    })
-    .catch(err => {
-      console.error('Error:', err);
-    });
+    }
+    catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   return (
