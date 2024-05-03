@@ -6,10 +6,12 @@ interface Patient {
 	name: string;
 	risk_level: string;
 	coverage_status: string;
-	// Add other properties as needed
+}
+interface Props {
+	hidden: boolean;
 }
 
-const PatientList: React.FC = () => {
+const PatientList: React.FC<Props> = (props) => {
 	const [patients, setPatients] = useState<Patient[]>([]);
 	const [currentDate, setCurrentDate] = useState(new Date());
 	const [searchQuery, setSearchQuery] = useState<string>("");
@@ -62,15 +64,29 @@ const PatientList: React.FC = () => {
 		patient.name.toLowerCase().includes(searchQuery.toLowerCase())
 	);
 
+	//Function for changing background color of critical level
+	function getBackgroundColor(riskLevel: string) {
+		switch (riskLevel) {
+			case "Low":
+				return "#dcfce7";
+			case "Medium":
+				return "#fef9c3";
+			case "High":
+				return "#fee2e2";
+			default:
+				return "white"; 
+		}
+	}
+
 	return (
 		<div className="bg-gray-200 w-full h-screen p-4">
 			{/* Header, Date, and Add Patient Button */}
 			<div className="flex justify-between items-center pb-2">
-				<div>
+				<div hidden={props.hidden}>
 					<h2 className="text-xl font-bold">Patient Catalog</h2>
 					<p>{formattedDate}</p>
 				</div>
-				<div>
+				<div hidden={props.hidden}>
 					<button className="bg-[#63c7b2] rounded-md text-white px-4 py-1">
 						+ Add Patient
 					</button>
@@ -78,7 +94,7 @@ const PatientList: React.FC = () => {
 			</div>
 
 			{/* Search Bar */}
-			<div className="textInput relative">
+			<div hidden={props.hidden} className="textInput relative">
 				<input
 					className="bg-white text-gray-600 placeholder-grey-500 w-full pl-8 p-1"
 					type="text"
@@ -123,14 +139,18 @@ const PatientList: React.FC = () => {
 									></div>
 								</td>
 								<td className="p-2 text-left">{patient.name}</td>
-								<td className="p-2 text-left">{patient.risk_level}</td>
+								<td className="p-2 text-left">
+									<span className="rounded-lg px-4 py-.5"
+										style={{
+											backgroundColor: getBackgroundColor(patient.risk_level)}}>
+										{patient.risk_level}
+									</span>
+								</td>
 								<td className="p-2 text-left">{patient.id}</td>
 								<td className="p-2 text-left">{patient.coverage_status}</td>
 								<td className="p-2 text-left">
-									<a
-										className="bg-white rounded-lg p-2"
-										href={`${location.protocol}//${location.host}/notes/patient-profile/${patient.id}`}
-									>
+									<a className={index % 2 === 0 ? "bg-white rounded-lg p-2" : "bg-gray-200 rounded-lg p-2"}
+										href={`${location.protocol}//${location.host}/notes/patient-profile/${patient.id}`}>
 										View Reports
 									</a>
 								</td>

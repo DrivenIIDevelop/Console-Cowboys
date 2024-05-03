@@ -14,7 +14,7 @@ if (!container.reactRoot) {
 	root.render(
 		<React.StrictMode>
 			<PageWrapper>
-				<PatientList />
+				<PatientList {...{hidden:false}}/>
 				{/* This would eventually be it's own component
 				but I am writing inline JSX for time-sake */}
 				<div className="bg-gray-200 pt-5">

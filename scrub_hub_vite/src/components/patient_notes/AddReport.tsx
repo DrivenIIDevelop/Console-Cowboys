@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios"; // Import Axios for making HTTP requests
+import axios from "axios";
 
 interface AddReportProps {
 	patientId: number;
@@ -16,15 +16,14 @@ const AddReport: React.FC<AddReportProps> = ({ patientId }) => {
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		try {
-			const response = await axios.post(`notes/reports/${patientId}/add/`, {
+			const response = await axios.post(`notes/api/reports/${patientId}/add/`, {
 				critical_level: criticalLevel,
 				physician_id: currentDoctorId,
 				medication: medication,
 				notes: notes,
 				diagnosis: diagnosis,
 			});
-			console.log(response.data); // Handle response as needed
-			// Optionally, redirect the user to another page or display a success message
+			console.log(response.data);
 		} catch (error: any) {
 			setError(error.message);
 		}

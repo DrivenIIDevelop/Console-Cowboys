@@ -6,14 +6,10 @@ def cleanup_test_data():
     # Remove test data for PatientReports
     PatientReport.objects.filter(patient__name='Johnson, Sam').delete()
     PatientReport.objects.filter(patient__name='Brown, Rebecca').delete()
-
     # Remove test data for Patients
     Patient.objects.filter(name='Johnson, Sam').delete()
     Patient.objects.filter(name='Brown, Rebecca').delete()
-
     # Remove test data for Physicians
     Physician.objects.filter(name='Dr. John Doe').delete()
     Physician.objects.filter(name='Dr. Jane Smith').delete()
-
-if __name__ == "__main__":
-    cleanup_test_data()
+cleanup_test_data()
