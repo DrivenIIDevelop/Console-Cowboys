@@ -35,12 +35,24 @@ class Patient(models.Model):
     	return self.name
 
 class PatientReport(models.Model):
+    LOW = 'Low'
+    MEDIUM = 'Medium'
+    HIGH = 'High'
+
+    RISK_CHOICES = [
+        (LOW, 'Low'),
+        (MEDIUM, 'Medium'),
+        (HIGH, 'High')
+    ]
+
     physician = models.ForeignKey(Physician, on_delete=models.DO_NOTHING) #Not sure if this is correct on_delete
     patient = models.ForeignKey(Patient, on_delete=models.DO_NOTHING)
-    medical_condition = models.CharField(max_length=100)
-    content = models.TextField()
+    medical_condition = models.CharField(max_length=100) #Diagnosis
+    content = models.TextField() #Notes
     date_recorded = models.DateTimeField(auto_now_add=True) # Need to format time
-    
+    risk_level = models.CharField(max_length=10, choices=RISK_CHOICES, default=RISK_CHOICES[0][0])
+    medications_prescribed = models.TextField(default='N/A')
+
     # Add additional fields for file uploads (e.g., FileField for documents)
     def __str__(self):
         return f"Report for {self.patient.name} on {self.date_recorded}"
