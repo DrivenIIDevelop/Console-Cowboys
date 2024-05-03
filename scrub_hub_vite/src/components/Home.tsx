@@ -1,6 +1,6 @@
 import scrubHubLogo from "../assets/scrubHubLogo.png"
 import scrubPeople from "../assets/scrubPeople.png"
-import "../index.css"
+// import "../index.css"
 
 const Home = () => {
 	return(
@@ -15,8 +15,8 @@ const Home = () => {
 					<p className="font-fira-condensed text-[26px] mt-5 mb-8">
 						Join our platform and experience seamless<br></br> communication and collaboration among medical<br></br> professionals.
 					</p>
-					<button className="bg-[#00AEB5] text-white py-2 px-6 rounded-md mr-8" onClick={() => window.location.href = '/authenticate/login'}>Login</button>
-					<button className="bg-[#D8D8D9] text-black py-2  px-6 rounded-md" onClick={() => window.location.href = '/authenticate/register'}>Register</button>
+					<button className="bg-[#00AEB5] text-white py-2 px-6 rounded-md mr-8 font-bold" onClick={() => window.location.href = '/authenticate/login'}>Login</button>
+					<button className="bg-[#D8D8D9] text-black py-2  px-6 rounded-md font-bold" onClick={() => window.location.href = '/authenticate/register'}>Register</button>
 					</div>
 				</div>
 			</div>
