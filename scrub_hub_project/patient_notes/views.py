@@ -3,8 +3,11 @@ from django.shortcuts import render, get_object_or_404
 from .models import PatientReport, Patient, Physician
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
-def add_report(request, patient_id):
+
+@ensure_csrf_cookie
+def add_report_api(request, patient_id):
 	if request.method == 'POST':
 		
 		data = json.loads(request.body)
@@ -68,3 +71,11 @@ def patient_profile(request, patient_id):
 
 	context = { 'patientId': objectToPassToReact }
 	return render(request, 'patient_notes/patient_profile.html', context)
+
+def add_report(request, patient_id):
+	objectToPassToReact = {
+		'patientId': patient_id,
+	}
+
+	context = { 'patientId': objectToPassToReact }
+	return render(request, 'patient_notes/add_report.html', context)

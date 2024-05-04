@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+{% load django_vite %}
+<head>
+	<title>TEST</title>
+	<!-- hot reload support -->
+	{% vite_hmr_client %} {% vite_react_refresh %}
+	{{patientId|json_script:"_DjangoData_" }}
+</head>
+<body>
+	<div id="root"></div>
+	<!-- Create a script tag to load file from Vite.
+	     In debug mode, this resolves to a localhost:5173 URL and vite dev server should be running.
+		 Otherwise, it will check Vite's manifest.json to find the file in Vite's build output.
+	-->
+	{% vite_asset 'src/pages/AddReportPage.tsx' %}
+</body>

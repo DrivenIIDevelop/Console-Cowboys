@@ -124,10 +124,8 @@ const PatientList: React.FC<Props> = (props) => {
 					</thead>
 					<tbody>
 						{filteredPatients.map((patient, index) => (
-							<tr
-								key={patient.id}
-								className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}
-							>
+							<tr key={patient.id}
+								className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}>
 								<td className="p-2">
 									<div
 										style={{
