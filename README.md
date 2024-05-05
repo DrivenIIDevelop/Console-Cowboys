@@ -1,6 +1,8 @@
 # Console-Cowboys
 
-This repository is for the DevC 1.0 hackathon, and the Console Cowboys team. We will be building a "Healthcare Communication and Collaboration Software".
+This repository is for the DevC 1.0 hackathon, and the Console Cowboys team. Our project for this hackathon is "Healthcare Communication and Collaboration Software".
+
+The hackathon officially ended on May 5th with our hackathon presentations. At this point, we've implemented most of the backend features that were originally planned, along with most of the individual user interface components although they are not really well integrated at this point.
 
 ## Contributing
 
@@ -51,10 +53,18 @@ Potential features which may or may not be implemented:
 
 ## Project structure
 
-The current plan for the architecture seems to be:
-* Use React + TypeScript for the front end.
-* Use Django and SQL for the backend.
-	* Should we install a SQL server, or can we use SQLite (which Djando projects use by default)?
+The project is set up with a backend and frontend project.
+
+Frontend, at /scrub_hub_vite:
+* We used React to build our user interface.
+* Code is written in TypeScript.
+* TailwindCSS and some regular CSS is used for styling.
+* This is set up in a Vite project, and requires node.js for building.
+
+Backend, at /scrub_hub_project:
+* We used Django as our web server. Serves pages and our API endpoints.
+* We have one Django project, and separate Django "apps" for various contributors' assigned features.
+* Our data is currently in a SQLite database. Migration to a more proper SQL server in production should be made easy by Django's SQL integrations.
 
 ## Tailwind CSS
 This is to have a standard CSS styling for our application. Tailwind provides a cleaner and fast way to style components.
@@ -64,7 +74,7 @@ Followed the above link to set up Tailwind CSS.
 
 You can install TailwindCSS Intellisense extension to help with autocomplete and syntax. (Prettier is another option as well, or both)
 
-Configuration: https://tailwindcss.com/docs/configuration 
+Configuration: https://tailwindcss.com/docs/configuration
 You can also specify specific parameters for your whole project in tailwind.config.js in theme: https://tailwindcss.com/docs/theme
 such as colors, or screen size definitions.
 
