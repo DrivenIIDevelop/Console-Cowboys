@@ -14,7 +14,11 @@ def get_conversation_data(conversation, user_id):
 		.filter(conversation__id=conversation.id, date__gte=oldest_to_look_for) \
 		.order_by('-date')[:20]
 	data = {
-		'participants': [p.user.get_full_name() for p in conversation.participants.exclude(user__id=user_id).all()],
+		'participants': [
+			{
+				'name': p.user.get_full_name(),
+				'id': p.user.id,
+	 		} for p in conversation.participants.exclude(user__id=user_id).all()],
 		'messages': [
 			{
 				'message': m.text.decode(),
@@ -66,7 +70,11 @@ def all_conversations(request):
 
 	existing_conversations = [
 		{
-			'participants': [p.user.get_full_name() for p in c.participants.exclude(user__id=user_id).all()],
+			'participants': [
+				{
+					'name': p.user.get_full_name(),
+					'id': p.user.id,
+		 		} for p in c.participants.exclude(user__id=user_id).all()],
 			'last_message_time': str(c.last_message_date or datetime.datetime.now(datetime.UTC)),
 			'id': c.id,
 		} for c in user_conversations

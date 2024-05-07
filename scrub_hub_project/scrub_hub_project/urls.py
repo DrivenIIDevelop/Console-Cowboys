@@ -15,13 +15,13 @@ Including another URLconf
 	2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, register_converter
 
 # HTTP
 urlpatterns = [
 	path("admin/", admin.site.urls),
-	
-	path('authenticate/', include('authenticate.urls')), 
+
+	path('authenticate/', include('authenticate.urls')),
 	path('', include('scrub_hub_frontend.urls')),
 	path('api/', include('email_app.urls')),
 	path('notes/', include('patient_notes.urls')),
@@ -30,6 +30,17 @@ urlpatterns = [
 
 # Websocket
 from scrub_hub_chat import consumers
+
+class NegativeIntConverter:
+    regex = '-?\d+'
+
+    def to_python(self, value: str):
+        return int(value)
+
+    def to_url(self, value: int):
+        return f'{value}'
+register_converter(NegativeIntConverter, 'sint')
+
 websocket_urlpatterns = [
-	path("ws/<int:conversation_id>", consumers.ChatConsumer.as_asgi()),
+	path("ws/<sint:conversation_id>", consumers.ChatConsumer.as_asgi()),
 ]

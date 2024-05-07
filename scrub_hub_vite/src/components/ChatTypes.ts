@@ -26,11 +26,19 @@ export function isMessageProps(obj?: {[key: string]: unknown}): obj is MessagePr
 		return false;
 }
 
+function isUser(obj?: {[key: string]: unknown}): obj is User {
+	return !!(
+		obj &&
+		typeof obj.name === 'string' &&
+		typeof obj.id === 'number'
+	);
+}
+
 export function isChatProps(obj?: {[key: string]: unknown}): obj is ChatProps {
 	return !!(
 		obj &&
 		obj.participants instanceof Array &&
-		obj.participants.every((p) => typeof p === 'string') &&
+		obj.participants.every((p) => isUser(p)) &&
 		obj.messages instanceof Array &&
 		obj.messages.every(isMessageProps)
 	);
@@ -40,7 +48,7 @@ function isConversationProps(obj?: {[key: string]: unknown}): obj is Conversatio
 	if (!(
 		obj &&
 		obj.participants instanceof Array &&
-		obj.participants.every((p) => typeof p === 'string') &&
+		obj.participants.every((p) => isUser(p)) &&
 		typeof obj.id === 'number'
 	))
 		return false;
@@ -60,9 +68,8 @@ export function isConversationListProps(obj?: {[key: string]: unknown}): obj is 
 		obj.conversations instanceof Array &&
 		obj.conversations.every(isConversationProps) &&
 		obj.available_users instanceof Array &&
-		obj.available_users.every((u) =>
-			typeof u.name === 'string' &&
-			typeof u.id === 'number'
-		)
+		obj.available_users.every((u) => isUser(u))
 	);
 }
+
+export type User = { name: string, id: number };

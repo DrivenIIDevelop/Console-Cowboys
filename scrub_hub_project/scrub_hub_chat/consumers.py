@@ -45,6 +45,7 @@ class ChatConsumer(GroupedConsumer):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.ignore = None
+		self.conversation_id = -1
 
 	def get_users_in_conversation(self):
 		users = []
@@ -62,17 +63,26 @@ class ChatConsumer(GroupedConsumer):
 			self.close(401) # This method has a "reason" parameter, but that reason is not visible to the client. Weird.
 			return
 
-		self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
+		id: int = self.scope['url_route']['kwargs']['conversation_id']
+		if (id >= 0):
+			self.set_conversation(id)
+
+		self.group_add(str(self.user.id))
+		self.accept()
+
+	def set_conversation(self, id):
+		self.conversation_id = id
 		self.get_users_in_conversation()
 		# Validate that this user is part of the conversation
 		if str(self.user.id) not in self.users_in_conversation:
 			self.close(403)
 			return
 
-		self.group_add(str(self.user.id))
-		self.accept()
-
 	def receive_json(self, data):
+		if 'created' in data:
+			self.set_conversation(data['created'])
+			return
+
 		msg_txt: str = data.get('message', None)
 		sender_msg_id: int = data.get('id', None)
 		if type(msg_txt) != str or type(sender_msg_id) != int:

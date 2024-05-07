@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import styles from './chat.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
-import { isMessageProps } from './ChatTypes';
+import { User, isChatProps, isMessageProps } from './ChatTypes';
 import { FaArrowRight } from 'react-icons/fa';
 
 export type MessageProps = {
@@ -24,12 +24,23 @@ function MessageComponent({ message, username, time, unconfirmed } : MessageProp
 	</div>
 }
 
+async function createConversation(user_id: number) {
+	// TODO: Create symmetric key for conversation, upload encrypted copies with users' public keys
+	const response = await fetch(`start/${user_id}`);
+	const data = await response.json();
+	if (isChatProps(data))
+		return data;
+	else
+		throw 'Error while creating conversation'; // TODO: Handle
+}
+
 export type ChatProps = {
-	participants: string[],
+	participants: User[],
 	messages: MessageProps[],
 	conversation_id: number,
+	createdHandler?: (old_id: number, new_id: number) => void,
 };
-export function ChatComponent({ participants, messages, conversation_id }: ChatProps) {
+export function ChatComponent({ participants, messages, conversation_id, createdHandler }: ChatProps) {
 	const [messagesState, setMsgs] = useState<MessageProps[]>(messages);
 	// Confusingly, the state won't get updated when we update the props. So we need an effect.
 	useEffect(() => setMsgs(messages), [messages]);
@@ -69,10 +80,20 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 	);
 
 	const [userMessage, setMessageInput] = useState('');
-	const send = () => {
+	const send = async () => {
 		if (!userMessage)
 			return;
 
+		// On first message, create conversation
+		if (conversation_id < 0) {
+			const chat = await createConversation(participants[0].id);
+			createdHandler?.(conversation_id, chat.conversation_id);
+			sendJsonMessage({
+				'created': chat.conversation_id,
+			});
+		}
+
+		// TODO: Encrypt message
 		const message: MessageProps & { id: number } = {
 			message: userMessage,
 			username: 'You',
@@ -92,7 +113,7 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 	return <div className='p-4 flex flex-col h-full'>
 		<div className='flex-grow-0 flex'>
 			<div className='profilePicture' />
-			<p className='flex-grow-0 text-2xl font-bold self-center'>{participants.join(', ')}</p>
+			<p className='flex-grow-0 text-2xl font-bold self-center'>{participants.map((p) => p.name).join(', ')}</p>
 		</div>
 		<div id='messageContainer' className='flex-grow-1 overflow-y-scroll h-full'>
 			{messagesState.map((m, i) => <MessageComponent key={i} {...m} />)}
