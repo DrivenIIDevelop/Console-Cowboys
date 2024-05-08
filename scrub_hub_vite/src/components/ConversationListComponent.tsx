@@ -1,24 +1,23 @@
 import { useState } from 'react';
-import { User, isChatProps } from './ChatTypes';
-import ChatComponent, { ChatProps } from './ChatComponent';
+import ChatComponent, { ChatProps, MessageProps } from './ChatComponent';
 import styles from './chat.module.css';
 
 import { CiSearch } from "react-icons/ci"
+import { IncomingConversationDetails, User, isIncomingConversationDetailsData } from '../models/chat';
 
 export type ConversationProps = {
 	participants: User[],
-	last_message_time?: Date,
-	last_message?: string,
+	last_message?: MessageProps,
 	id: number,
 }
-function ConversationComponent({ participants, last_message_time, last_message }: ConversationProps) {
+function ConversationComponent({ participants, last_message }: ConversationProps) {
 	return <div className='relative border-2 border-black p-3'>
-		<p className='absolute right-1 top-0 text-sm text-gray-900'>{last_message_time?.toLocaleTimeString()}</p> {/* TODO: Format as "2min ago" */}
+		<p className='absolute right-1 top-0 text-sm text-gray-900'>{last_message?.time.toLocaleTimeString()}</p> {/* TODO: Format as "2min ago" */}
 		<div className='flex flex-row'>
 			<div className='profilePicture' /> {/* Profile picture placeholder. TODO: Include indicator for people who are online */}
 			<div className='self-center'>
 				<p className='font-bold text-lg'>{participants.map((p) => p.name).join(', ')}</p>
-				<p>{last_message ?? 'Click to start a conversaiton'}</p>
+				<p>{last_message?.message ?? 'Click to start a conversaiton'}</p>
 			</div>
 		</div>
 	</div>
@@ -32,7 +31,7 @@ export default function ConversationListComponent({ conversations, available_use
 	const [activeConversation, setConversation] = useState<ChatProps | undefined>();
 	const [nextTemporaryId, setTempId] = useState(-1);
 
-	async function conversationClick(url_path: string) {
+	async function conversationClick(url_path: string): Promise<ChatProps> {
 		const spinner = document.getElementById('messagesSpinner');
 		if (spinner) spinner.hidden = false;
 		const response = await fetch(`/messages/${url_path}`);
@@ -43,8 +42,8 @@ export default function ConversationListComponent({ conversations, available_use
 			throw 'Bad conversation request';
 		}
 		const data = await response.json();
-		if (isChatProps(data)) {
-			return data;
+		if (isIncomingConversationDetailsData(data)) {
+			return new IncomingConversationDetails(data).toProps();
 		} else {
 			alert('error');
 			throw 'Bad conversation data';

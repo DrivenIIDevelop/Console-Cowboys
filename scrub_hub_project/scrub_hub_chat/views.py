@@ -19,13 +19,7 @@ def get_conversation_data(conversation, user_id):
 				'name': p.user.get_full_name(),
 				'id': p.user.id,
 	 		} for p in conversation.participants.exclude(user__id=user_id).all()],
-		'messages': [
-			{
-				'message': m.text.decode(),
-				'username': m.user.get_full_name(),
-				'time': str(m.date),
-			} for m in messages[::-1]
-		],
+		'messages': [m.json_serializable() for m in messages[::-1]],
 		'conversation_id': conversation.id,
 	}
 	return JsonResponse(data)
@@ -75,7 +69,7 @@ def all_conversations(request):
 					'name': p.user.get_full_name(),
 					'id': p.user.id,
 		 		} for p in c.participants.exclude(user__id=user_id).all()],
-			'last_message_time': str(c.last_message_date or datetime.datetime.now(datetime.UTC)),
+			'last_message': c.get_last_message().json_serializable(),
 			'id': c.id,
 		} for c in user_conversations
 	]

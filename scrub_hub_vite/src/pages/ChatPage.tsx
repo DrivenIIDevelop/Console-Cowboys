@@ -5,15 +5,16 @@ import ReactDOM from 'react-dom/client';
 import '../index.css';
 import GetScriptData from '../GetScriptData.ts';
 import ConversationListComponent from '../components/ConversationListComponent.tsx';
-import { isConversationListProps } from '../components/ChatTypes.ts';
 import PageWrapper from '../components/PageWrapper.tsx';
+import { IncomingConversationList, isIncomingConversationListData } from '../models/chat.ts';
 
 const container: HTMLElement & { reactRoot?: ReactDOM.Root } = document.getElementById('root')!;
 if (!container.reactRoot) {
 	const root = container.reactRoot = ReactDOM.createRoot(container);
-	const props = GetScriptData();
-	if (!isConversationListProps(props))
-		throw 'Invalid props';
+	const data = GetScriptData();
+	if (!isIncomingConversationListData(data))
+		throw 'Invalid data';
+	const props = new IncomingConversationList(data).toProps();
 
 	root.render(
 		<React.StrictMode>

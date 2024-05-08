@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import styles from './chat.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
-import { User, isChatProps, isMessageProps } from './ChatTypes';
 import { FaArrowRight } from 'react-icons/fa';
+import { IncomingConversationDetails, IncomingMessage, OutgoingMessage, User, isIncomingConversationDetailsData, isIncomingMessageData } from '../models/chat';
 
 export type MessageProps = {
 	message: string,
@@ -24,12 +24,12 @@ function MessageComponent({ message, username, time, unconfirmed } : MessageProp
 	</div>
 }
 
-async function createConversation(user_id: number) {
+async function createConversation(user_id: number): Promise<ChatProps> {
 	// TODO: Create symmetric key for conversation, upload encrypted copies with users' public keys
 	const response = await fetch(`start/${user_id}`);
 	const data = await response.json();
-	if (isChatProps(data))
-		return data;
+	if (isIncomingConversationDetailsData(data))
+		return new IncomingConversationDetails(data).toProps();
 	else
 		throw 'Error while creating conversation'; // TODO: Handle
 }
@@ -66,8 +66,8 @@ export function ChatComponent({ participants, messages, conversation_id, created
 			onClose: () => console.log('close'),
 			onMessage: (event) => {
 				const data = JSON.parse(event.data);
-				if (isMessageProps(data)) {
-					addMessage(data);
+				if (isIncomingMessageData(data)) {
+					addMessage(new IncomingMessage(data).toProps());
 				} else if (typeof data.received === 'number') {
 					messagesState[data.received].unconfirmed = false;
 				} else {
@@ -101,8 +101,9 @@ export function ChatComponent({ participants, messages, conversation_id, created
 			unconfirmed: true,
 			id: messagesState.length, // Track when it's been received.
 		};
+		const outgoingMessage = new OutgoingMessage(message.message, message.id);
+		sendJsonMessage(outgoingMessage.getData());
 
-		sendJsonMessage(message);
 		addMessage(message);
 		setMessageInput('');
 	};
