@@ -11,13 +11,15 @@ export type ConversationProps = {
 	id: number,
 }
 function ConversationComponent({ participants, last_message }: ConversationProps) {
-	return <div className='relative border-2 border-black p-3'>
+	return <div className='relative border-2 border-black p-3 h-26'>
 		<p className='absolute right-1 top-0 text-sm text-gray-900'>{last_message?.time.toLocaleTimeString()}</p> {/* TODO: Format as "2min ago" */}
 		<div className='flex flex-row'>
 			<div className='profilePicture' /> {/* Profile picture placeholder. TODO: Include indicator for people who are online */}
 			<div className='self-center'>
 				<p className='font-bold text-lg'>{participants.map((p) => p.name).join(', ')}</p>
-				<p>{last_message?.message ?? 'Click to start a conversaiton'}</p>
+				<p className='max-h-6 overflow-hidden'>
+					{last_message ? `${last_message.username}: ${last_message.message}` : 'Click to start a conversaiton'}
+				</p>
 			</div>
 		</div>
 	</div>
@@ -87,7 +89,7 @@ export default function ConversationListComponent({ conversations, available_use
 	}
 
 	return <div className={styles.root}>
-		<div className={`flex-shrink-0 flex-grow-0 flex flex-col gap-y-3 m-6 items-center overflow-y-scroll`}>
+		<div className={`flex-shrink-0 flex-grow-0 flex flex-col gap-y-3 m-6 items-center overflow-y-scroll max-w-[20%]`}>
 			<p className='text-2xl font-bold'>Recent Chats</p>
 			<div className='textInput relative'>
 				<input placeholder='search'></input>
@@ -95,7 +97,7 @@ export default function ConversationListComponent({ conversations, available_use
 					<CiSearch />
 				</button>
 			</div>
-			{conversations.map((c, i) => <div key={i} onClick={() => openConversation(c)}>
+			{conversations.map((c, i) => <div className='w-full' key={i} onClick={() => openConversation(c)}>
 				<ConversationComponent {...c} />
 			</div>)}
 			<p className='text-2xl font-bold'>Start a conversation</p>
