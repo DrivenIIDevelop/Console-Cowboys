@@ -9,6 +9,10 @@ const rsaParams: RsaHashedKeyGenParams = {
 	modulusLength: 4096,
 	publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
 }
+const aesKeyParams: AesKeyAlgorithm = {
+	name: 'AES-GCM',
+	length: 256,
+}
 
 /**
  * Generates a RSA key pair, and uses the given password to encrypt the private key.
@@ -37,4 +41,9 @@ export async function decryptPrivateKey(key: string, password: string): Promise<
 		usages: ['decrypt', 'unwrapKey'],
 		isExtractable: true
 	});
+}
+
+export async function generateConversationKey() {
+	const key = await crypto.subtle.generateKey(aesKeyParams, true, ['encrypt', 'decrypt']);
+	return await crypto.subtle.exportKey('raw', key);
 }

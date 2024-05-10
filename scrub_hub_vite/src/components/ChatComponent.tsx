@@ -3,6 +3,10 @@ import useWebSocket from 'react-use-websocket';
 import styles from './chat.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
 import { FaArrowRight } from 'react-icons/fa';
 import { IncomingConversationDetails, IncomingMessage, OutgoingMessage, User, isIncomingConversationDetailsData, isIncomingMessageData } from '../models/chat';
+import { generateConversationKey } from '../encryption';
+
+import Cookies from 'universal-cookie';
+const cookies = new Cookies();
 
 export type MessageProps = {
 	message: string,
@@ -24,9 +28,23 @@ function MessageComponent({ message, username, time, unconfirmed } : MessageProp
 	</div>
 }
 
-async function createConversation(user_id: number): Promise<ChatProps> {
-	// TODO: Create symmetric key for conversation, upload encrypted copies with users' public keys
-	const response = await fetch(`start/${user_id}`);
+async function createConversation(participants: User[]): Promise<ChatProps> {
+	const conversationKey = await generateConversationKey();
+	console.log(conversationKey.byteLength);
+	// const publicKeys = TODO
+	const keyEncrypted = new FormData();
+	for (const user of participants) {
+		// TODO: encrypt key
+		keyEncrypted.append(user.id.toString(), new Blob([conversationKey]));
+	}
+
+	const response = await fetch('start/', {
+		method: 'POST',
+		headers: {
+			"X-CSRFToken": cookies.get("csrftoken"),
+		},
+		body: keyEncrypted,
+	});
 	const data = await response.json();
 	if (isIncomingConversationDetailsData(data))
 		return new IncomingConversationDetails(data).toProps();
@@ -86,7 +104,7 @@ export function ChatComponent({ participants, messages, conversation_id, created
 
 		// On first message, create conversation
 		if (conversation_id < 0) {
-			const chat = await createConversation(participants[0].id);
+			const chat = await createConversation(participants);
 			createdHandler?.(conversation_id, chat.conversation_id);
 			sendJsonMessage({
 				'created': chat.conversation_id,

@@ -1,13 +1,20 @@
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
-from django.shortcuts import render
 import datetime
+import base64
 
 from .models import Conversation, ConversationParticipant, Message
 from authenticate.models import CustomUser as User
+
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.shortcuts import render
 from rest_framework.decorators import api_view
 
-def get_conversation_data(conversation, user_id):
+def get_conversation_data(conversation: Conversation, user_id):
+	# Ensure given user is a participant
+	user: ConversationParticipant | None = conversation.participants.filter(user__id=user_id)[0]
+	if user is None:
+		raise Exception('The given user id does not belong to the requested conversation.')
+
 	oldest_to_look_for = datetime.datetime.now(datetime.UTC)
 	oldest_to_look_for -= datetime.timedelta(days=30)
 	messages = Message.objects \
@@ -21,6 +28,7 @@ def get_conversation_data(conversation, user_id):
 	 		} for p in conversation.participants.exclude(user__id=user_id).all()],
 		'messages': [m.json_serializable() for m in messages[::-1]],
 		'conversation_id': conversation.id,
+		'key': base64.b64encode(user.encrypted_key).decode('ascii'), # Dumb library gives base64 output as bytes, so we must decode it.
 	}
 	return JsonResponse(data)
 
@@ -35,25 +43,30 @@ def conversation(request, conversation_id):
 	conversation = Conversation.objects.get(id=conversation_id)
 	return get_conversation_data(conversation, user_id)
 
-@api_view(['GET'])
-def make_conversation(request, with_user_id):
+@api_view(['POST'])
+def make_conversation(request):
 	user_id = request.user.id
 	if user_id is None:
 		return HttpResponseForbidden('You are not logged in.')
-	# verify other user exists
-	other_user = User.objects.filter(id=with_user_id).first()
-	if other_user is None:
-		return HttpResponseBadRequest('The requested user does not exist.')
-	# TODO: Check that the requested user shares a group with the requester?
+	data = request.data
+	# verify all users exist
+	for key in data:
+		other_user = User.objects.filter(id=int(key)).first()
+		if other_user is None:
+			return HttpResponseBadRequest('The requested user does not exist.')
+		# TODO: Check that the requested user shares a group with the requester?
 
 	# Make the conversation and set it up
-	conversation = Conversation()
-	conversation.save() # must save to give it an id, before participants can be added
-	p1 = ConversationParticipant(user=request.user); p1.save()
-	p2 = ConversationParticipant(user=other_user); p2.save()
-	conversation.participants.set([p1, p2])
-	conversation.save()
+	conversation = Conversation.objects.create()
+	p: ConversationParticipant
+	for key in data:
+		p = ConversationParticipant.objects.create(user_id=int(key), encrypted_key=data[key].read())
+		conversation.participants.add(p)
+	# TEMPORARY: Add the user to the request
+	p = ConversationParticipant.objects.create(user_id=user_id, encrypted_key=p.encrypted_key)
+	conversation.participants.add(p)
 
+	conversation.save()
 	return get_conversation_data(conversation, user_id)
 
 
