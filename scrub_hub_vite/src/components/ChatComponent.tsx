@@ -30,7 +30,6 @@ function MessageComponent({ message, username, time, unconfirmed } : MessageProp
 
 async function createConversation(participants: User[]): Promise<ChatProps> {
 	const conversationKey = await generateConversationKey();
-	console.log(conversationKey.byteLength);
 	// const publicKeys = TODO
 	const keyEncrypted = new FormData();
 	for (const user of participants) {
@@ -56,10 +55,13 @@ export type ChatProps = {
 	participants: User[],
 	messages: MessageProps[],
 	conversation_id: number,
+	encryptionKey?: CryptoKey,
 	createdHandler?: (old_id: number, new_id: number) => void,
 };
-export function ChatComponent({ participants, messages, conversation_id, createdHandler }: ChatProps) {
+export function ChatComponent({ participants, messages, conversation_id, encryptionKey, createdHandler }: ChatProps) {
 	const [messagesState, setMsgs] = useState<MessageProps[]>(messages);
+	// eslint-disable-next-line prefer-const
+	let [keyState, setKey] = useState(encryptionKey);
 	// Confusingly, the state won't get updated when we update the props. So we need an effect.
 	useEffect(() => setMsgs(messages), [messages]);
 
@@ -82,10 +84,10 @@ export function ChatComponent({ participants, messages, conversation_id, created
 		{
 			onOpen: () => console.log('open'),
 			onClose: () => console.log('close'),
-			onMessage: (event) => {
+			onMessage: async (event) => {
 				const data = JSON.parse(event.data);
 				if (isIncomingMessageData(data)) {
-					addMessage(new IncomingMessage(data).toProps());
+					addMessage(await new IncomingMessage(data, keyState!).toProps());
 				} else if (typeof data.received === 'number') {
 					messagesState[data.received].unconfirmed = false;
 				} else {
@@ -105,13 +107,15 @@ export function ChatComponent({ participants, messages, conversation_id, created
 		// On first message, create conversation
 		if (conversation_id < 0) {
 			const chat = await createConversation(participants);
+			setKey(keyState = chat.encryptionKey);
 			createdHandler?.(conversation_id, chat.conversation_id);
 			sendJsonMessage({
 				'created': chat.conversation_id,
 			});
 		}
+		if (keyState === undefined)
+			throw 'No key'; // should not be possible
 
-		// TODO: Encrypt message
 		const message: MessageProps & { id: number } = {
 			message: userMessage,
 			username: 'You',
@@ -119,8 +123,8 @@ export function ChatComponent({ participants, messages, conversation_id, created
 			unconfirmed: true,
 			id: messagesState.length, // Track when it's been received.
 		};
-		const outgoingMessage = new OutgoingMessage(message.message, message.id);
-		sendJsonMessage(outgoingMessage.getData());
+		const outgoingMessage = new OutgoingMessage(message.message, message.id, keyState);
+		sendJsonMessage(await outgoingMessage.getData());
 
 		addMessage(message);
 		setMessageInput('');

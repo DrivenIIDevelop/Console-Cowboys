@@ -84,20 +84,20 @@ class ChatConsumer(GroupedConsumer):
 			return
 
 		msg_txt: str = data.get('message', None)
+		iv: str = data.get('iv', None)
 		sender_msg_id: int = data.get('id', None)
-		if type(msg_txt) != str or type(sender_msg_id) != int:
+		if type(msg_txt) != str or type(sender_msg_id) != int or type(iv) != str:
 			raise Exception('Invalid data received.')
-		# TODO: Encrypt msg
-		msg_blob = msg_txt.encode()
 
 		message = {
 			'message': msg_txt,
+			'iv': iv,
 			'username': self.user.get_full_name(),
 			'time': str(datetime.datetime.now(datetime.UTC)),
 			'type': 'chat_message', # Tells channels what method to use to handle the group message.
 		}
 		# Add message to database
-		Message(text=msg_blob, conversation_id=self.conversation_id, user=self.user).save()
+		Message(text=msg_txt, iv=iv, conversation_id=self.conversation_id, user=self.user).save()
 
 		# Echo back to the sender so they know it's been received
 		self.send_json({ 'received': sender_msg_id })

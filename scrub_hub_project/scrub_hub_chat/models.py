@@ -6,7 +6,7 @@ from django.conf import settings
 class ConversationParticipant(models.Model):
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 	# This will hold the conversation's symmetric key, encrypted with the user's public asymetric key.
-	encrypted_key = models.BinaryField(max_length=50, blank=True) # ??? length TODO (this field isn't used at all yet)
+	encrypted_key = models.BinaryField(max_length=50, blank=True)
 
 class Conversation(models.Model):
 	participants = models.ManyToManyField(to=ConversationParticipant)
@@ -22,7 +22,9 @@ class Conversation(models.Model):
 class Message(models.Model):
 	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-	text = models.BinaryField(max_length=2000, blank=False)
+	# text (encrypted) and iv will be base64 encoded (which is done for sending/receiving)
+	text = models.TextField(max_length=2000, blank=False)
+	iv = models.CharField(max_length=12, blank=False)
 	date = models.DateTimeField(default=timezone.now)
 
 	class Meta:
@@ -32,7 +34,8 @@ class Message(models.Model):
 
 	def json_serializable(self):
 		return {
-			'message': self.text.decode(),
+			'message': self.text,
 			'username': self.user.get_full_name(),
 			'time': str(self.date),
+			'iv': self.iv,
 		}

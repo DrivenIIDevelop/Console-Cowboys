@@ -14,7 +14,7 @@ if (!container.reactRoot) {
 	const data = GetScriptData();
 	if (!isIncomingConversationListData(data))
 		throw 'Invalid data';
-	const props = new IncomingConversationList(data).toProps();
+	const props = await new IncomingConversationList(data).toProps();
 
 	root.render(
 		<React.StrictMode>

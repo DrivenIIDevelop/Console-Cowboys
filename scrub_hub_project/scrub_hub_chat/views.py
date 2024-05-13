@@ -84,6 +84,7 @@ def all_conversations(request):
 		 		} for p in c.participants.exclude(user__id=user_id).all()],
 			'last_message': c.get_last_message().json_serializable(),
 			'id': c.id,
+			'key': base64.b64encode(c.participants.get(user__id=user_id).encrypted_key).decode('ascii'),
 		} for c in user_conversations
 	]
 	# For now, user may start a conversation with any user who they don't already have a conversation with
