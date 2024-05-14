@@ -42,8 +42,8 @@ def logout_view(request):
 
 @login_required(login_url="/authenticate/login/")
 def dashboard_view(request):
-    context = { 'first_name': request.user.first_name }
-    return render(request, 'authenticate/dashboard.html', context)
+    user_data = { 'first_name': request.user.first_name, 'last_name': request.user.last_name }
+    return render(request, 'authenticate/dashboard.html', {'user_data': user_data})
 
 @ensure_csrf_cookie
 def register_view(request):
