@@ -22,11 +22,15 @@ def login_view(request):
         
         if email is None or password is None:
             return JsonResponse({"detail":"Please provide username and password"})
-        user = authenticate(email=email, password=password)
+        user: CustomUser = authenticate(email=email, password=password)
         if user is None:
             return JsonResponse({"detail":"Invalid credentials"}, status=400)
         login(request, user)
-        return JsonResponse({"detail": "Succesfully logged in!"})
+        return JsonResponse({
+            'id': user.id,
+            'firstName': user.first_name,
+            'lastName': user.last_name,
+        })
     elif request.method == "GET":
         #Add condition for if already logged in then go to dashboard? Maybe might not need
         return render(request, 'authenticate/login.html')
@@ -42,8 +46,7 @@ def logout_view(request):
 
 @login_required(login_url="/authenticate/login/")
 def dashboard_view(request):
-    user_data = { 'first_name': request.user.first_name, 'last_name': request.user.last_name }
-    return render(request, 'authenticate/dashboard.html', {'user_data': user_data})
+    return render(request, 'authenticate/dashboard.html')
 
 @ensure_csrf_cookie
 def register_view(request):
