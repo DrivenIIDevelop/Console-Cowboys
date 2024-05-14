@@ -9,10 +9,16 @@ import { IoChatbubbleEllipsesOutline } from "react-icons/io5"
 import scrubHubLogo from "../assets/scrubHubLogoMenu.png";
 import notification from "../assets/notification.png";
 import profilePic from "../assets/profilePic.png";
+import { useContext } from "react";
+import { LogOut, LoginContext, LoginState } from "../loginInfo";
 
 export default function Navigation() {
-	// const [nav, setNav] = useState(false)
-	// const handleClick = () => setNav(!nav)
+	const loginInfo = useContext(LoginContext);
+	if (!loginInfo.user || loginInfo.loggedIn !== LoginState.IN) {
+		// This shouldn't ever happen. Django would redirect us first.
+		window.location.href = `${location.protocol}//${location.host}/authenticate/login`;
+		throw 'Not logged in';
+	}
 
 	return (
 		<div className="relative h-screen">
@@ -38,7 +44,7 @@ export default function Navigation() {
 						<IoChatbubbleEllipsesOutline size={30} />
 					</li>
 					<li className='pt-[280px] pb-[40px] cursor-pointer'>
-						<CiLogout size={30} />
+						<CiLogout size={30} onClick={LogOut} />
 					</li>
 				</ul>
 			</div>
@@ -55,7 +61,7 @@ export default function Navigation() {
 					<div className="ml-16 flex items-center">
 						<div className="border-2 border-[#63C7B2] rounded-[15px] overflow-hidden flex items-center py-2 px-2">
 							<img className="w-[32px] h-[32px] object-cover" src={profilePic} alt="Profile"/>
-							<div className="px-2 text-[16px]">Dr Dolittle</div>
+							<div className="px-2 text-[16px]">Dr. {loginInfo.user.firstName} {loginInfo.user.lastName}</div>
 						</div>
 					</div>
 				</div>

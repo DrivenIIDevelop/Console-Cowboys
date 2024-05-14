@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Cookies from 'universal-cookie';
 import scrubHubLogo from "../assets/scrubHubLogo.png"
 import scrubPeople from "../assets/scrubPeople.png"
+import { LoginState, PutInfoInLocalStorage, isLoggedInUser } from '../loginInfo';
 
 const cookies = new Cookies();
 
@@ -29,8 +30,12 @@ const Login = () => {
 			}
 
 			const data = await response.json();
-			if (data.detail === "Succesfully logged in!") { //Can change later in API and match here
-
+			if (isLoggedInUser(data)) {
+				PutInfoInLocalStorage({
+					user: data,
+					loggedIn: LoginState.IN,
+				});
+				// Our new login info isn't avaialble yet in the React context, but it should be once we load the next page.
 				window.location.href = `${location.protocol}//${location.host}/authenticate/dashboard`;
 			} else {
 				setError("Username or password did not match.");
@@ -85,3 +90,4 @@ const Login = () => {
 };
 
 export default Login;
+
