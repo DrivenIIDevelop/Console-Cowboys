@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import styles from './chat.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
 import { FaArrowRight } from 'react-icons/fa';
-import { IncomingConversationDetails, IncomingMessage, OutgoingMessage, User, isIncomingConversationDetailsData, isIncomingMessageData } from '../models/chat';
-import { generateConversationKey } from '../encryption';
+import { IncomingConversationDetails, IncomingMessage, OutgoingMessage, User, isIncomingConversationDetailsData, isIncomingMessageData, isPublicKeyInfoArray } from '../models/chat';
+import { encryptKey, generateConversationKey, getPublicKeyFromBase64 } from '../encryption';
 
 import Cookies from 'universal-cookie';
+import { LoginContext, LoginState } from '../loginInfo';
 const cookies = new Cookies();
 
 export type MessageProps = {
@@ -28,15 +29,33 @@ function MessageComponent({ message, username, time, unconfirmed } : MessageProp
 	</div>
 }
 
-async function createConversation(participants: User[]): Promise<ChatProps> {
+async function createConversation(participants: User[], privateKey: CryptoKey): Promise<ChatProps> {
+	// Get public keys for participants
+	const publicKeysResponse = await fetch('get-keys/', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'X-CSRFToken': cookies.get('csrftoken'),
+		},
+		body: JSON.stringify(participants.map((p) => p.id)),
+	});
+	if (!publicKeysResponse.ok)
+		throw 'Error while creating conversaiton';
+	const publicKeys = await publicKeysResponse.json();
+	if (!isPublicKeyInfoArray(publicKeys))
+		throw 'Error while creating conversaiton';
+
+	// Encrypt a key for this conversation, using public keys
 	const conversationKey = await generateConversationKey();
-	// const publicKeys = TODO
 	const keyEncrypted = new FormData();
-	for (const user of participants) {
-		// TODO: encrypt key
-		keyEncrypted.append(user.id.toString(), new Blob([conversationKey]));
+	for (const keyInfo of publicKeys) {
+		keyEncrypted.append(
+			keyInfo.user_id.toString(),
+			new Blob([await encryptKey(await getPublicKeyFromBase64(keyInfo.public_key_b64), conversationKey)])
+		);
 	}
 
+	// Upload
 	const response = await fetch('start/', {
 		method: 'POST',
 		headers: {
@@ -46,7 +65,7 @@ async function createConversation(participants: User[]): Promise<ChatProps> {
 	});
 	const data = await response.json();
 	if (isIncomingConversationDetailsData(data))
-		return new IncomingConversationDetails(data).toProps();
+		return new IncomingConversationDetails(data, privateKey).toProps();
 	else
 		throw 'Error while creating conversation'; // TODO: Handle
 }
@@ -59,26 +78,13 @@ export type ChatProps = {
 	createdHandler?: (old_id: number, new_id: number) => void,
 };
 export function ChatComponent({ participants, messages, conversation_id, encryptionKey, createdHandler }: ChatProps) {
+	const userInfo = useContext(LoginContext);
 	const [messagesState, setMsgs] = useState<MessageProps[]>(messages);
+	const [userMessage, setMessageInput] = useState('');
 	// eslint-disable-next-line prefer-const
 	let [keyState, setKey] = useState(encryptionKey);
 	// Confusingly, the state won't get updated when we update the props. So we need an effect.
 	useEffect(() => setMsgs(messages), [messages]);
-
-	function scrollToBottom() {
-		const container = document.getElementById('messageContainer');
-		if (container) {
-			container.scrollTop = container.scrollHeight;
-		} else {
-			console.log('no foo');
-		}
-	}
-	scrollToBottom();
-
-	function addMessage(message: MessageProps) {
-		messagesState.push(message);
-		scrollToBottom();
-	}
 
 	const { sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/${conversation_id}`,
 		{
@@ -99,14 +105,32 @@ export function ChatComponent({ participants, messages, conversation_id, encrypt
 		}
 	);
 
-	const [userMessage, setMessageInput] = useState('');
+	if (!userInfo.user || userInfo.loggedIn !== LoginState.IN) {
+		// This shouldn't ever happen. Django would redirect us first.
+		window.location.href = `${location.protocol}//${location.host}/authenticate/login`;
+		throw 'Not logged in';
+	}
+
+	function scrollToBottom() {
+		const container = document.getElementById('messageContainer');
+		if (container) {
+			container.scrollTop = container.scrollHeight;
+		}
+	}
+	scrollToBottom();
+
+	function addMessage(message: MessageProps) {
+		messagesState.push(message);
+		scrollToBottom();
+	}
+
 	const send = async () => {
 		if (!userMessage)
 			return;
 
 		// On first message, create conversation
 		if (conversation_id < 0) {
-			const chat = await createConversation(participants);
+			const chat = await createConversation(participants, await userInfo.user!.privateKey);
 			setKey(keyState = chat.encryptionKey);
 			createdHandler?.(conversation_id, chat.conversation_id);
 			sendJsonMessage({

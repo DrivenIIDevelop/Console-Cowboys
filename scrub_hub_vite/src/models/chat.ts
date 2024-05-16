@@ -76,9 +76,10 @@ export class IncomingMessage {
 }
 
 // Conversation level
-async function getConversationKeyFromBase64(dataBase64: string) {
+async function getConversationKeyFromBase64(dataBase64: string, privateKey: CryptoKey) {
 	const bytes = fromBase64(dataBase64);
-	return await crypto.subtle.importKey('raw', bytes, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+	const decrypted = await crypto.subtle.decrypt({ name: 'RSA-OAEP' }, privateKey, bytes);
+	return await crypto.subtle.importKey('raw', decrypted, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
 }
 
 type IncomingConversationDetailsData = {
@@ -98,10 +99,10 @@ export function isIncomingConversationDetailsData(obj?: {[key: string]: unknown}
 	);
 }
 export class IncomingConversationDetails {
-	public constructor(private data: IncomingConversationDetailsData) { }
+	public constructor(private data: IncomingConversationDetailsData, private privateKey: CryptoKey) { }
 
 	public async toProps(): Promise<ChatProps> {
-		const key = await getConversationKeyFromBase64(this.data.key);
+		const key = await getConversationKeyFromBase64(this.data.key, this.privateKey);
 		const messages: MessageProps[] = [];
 		for (const m of this.data.messages)
 			messages.push(await new IncomingMessage(m, key).toProps());
@@ -135,10 +136,10 @@ function isIncomingConversationOverviewData(obj?: {[key: string]: unknown}): obj
 	);
 }
 class IncomingConversationOverview {
-	public constructor(private data: IncomingConversationOverviewData) { }
+	public constructor(private data: IncomingConversationOverviewData, private privateKey: CryptoKey) { }
 
 	public async toProps(): Promise<ConversationProps> {
-		const key =  await getConversationKeyFromBase64(this.data.key);
+		const key =  await getConversationKeyFromBase64(this.data.key, this.privateKey);
 		const last_message = new IncomingMessage(this.data.last_message, key).toProps();
 		return {
 			id: this.data.id,
@@ -162,16 +163,35 @@ export function isIncomingConversationListData(obj?: {[key: string]: unknown}): 
 	);
 }
 export class IncomingConversationList {
-	public constructor(private data: IncomingConversationListData) { }
+	public constructor(private data: IncomingConversationListData, private privateKey: CryptoKey) { }
 
 	public async toProps(): Promise<ConversationListProps> {
 		const conversations: ConversationProps[] = [];
 		for (const c of this.data.conversations)
-			conversations.push(await new IncomingConversationOverview(c).toProps());
+			conversations.push(await new IncomingConversationOverview(c, this.privateKey).toProps());
 
 		return {
 			available_users: this.data.available_users,
 			conversations,
 		};
 	}
+}
+
+type PublicKeyInfo = {
+	public_key_b64: string,
+	user_id: number,
+}
+function isPublicKeyInfo(obj?: {[key: string]: unknown}): obj is PublicKeyInfo {
+	return !!(
+		obj &&
+		typeof obj.public_key_b64 === 'string' &&
+		typeof obj.user_id === 'number'
+	);
+}
+export function isPublicKeyInfoArray(obj?: unknown): obj is PublicKeyInfo[] {
+	return !!(
+		obj &&
+		obj instanceof Array &&
+		obj.every(isPublicKeyInfo)
+	);
 }

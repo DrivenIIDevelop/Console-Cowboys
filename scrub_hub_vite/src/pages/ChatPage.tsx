@@ -7,6 +7,7 @@ import GetScriptData from '../GetScriptData.ts';
 import ConversationListComponent from '../components/ConversationListComponent.tsx';
 import PageWrapper from '../components/PageWrapper.tsx';
 import { IncomingConversationList, isIncomingConversationListData } from '../models/chat.ts';
+import { GetUserInfo } from '../loginInfo.ts';
 
 const container: HTMLElement & { reactRoot?: ReactDOM.Root } = document.getElementById('root')!;
 if (!container.reactRoot) {
@@ -14,7 +15,7 @@ if (!container.reactRoot) {
 	const data = GetScriptData();
 	if (!isIncomingConversationListData(data))
 		throw 'Invalid data';
-	const props = await new IncomingConversationList(data).toProps();
+	const props = await new IncomingConversationList(data, await GetUserInfo().user!.privateKey).toProps();
 
 	root.render(
 		<React.StrictMode>

@@ -1,5 +1,6 @@
 import datetime
 import base64
+import json
 
 from .models import Conversation, ConversationParticipant, Message
 from authenticate.models import CustomUser as User
@@ -62,9 +63,6 @@ def make_conversation(request):
 	for key in data:
 		p = ConversationParticipant.objects.create(user_id=int(key), encrypted_key=data[key].read())
 		conversation.participants.add(p)
-	# TEMPORARY: Add the user to the request
-	p = ConversationParticipant.objects.create(user_id=user_id, encrypted_key=p.encrypted_key)
-	conversation.participants.add(p)
 
 	conversation.save()
 	return get_conversation_data(conversation, user_id)
@@ -104,3 +102,25 @@ def all_conversations(request):
 		},
 	}
 	return render(request, 'scrub_hub_chat/index.html', context)
+
+@api_view(['POST'])
+def get_public_keys(request):
+	user: User = request.user
+	if not user.is_authenticated:
+		return HttpResponseForbidden('You are not logged in.')
+
+	user_ids: list = request.data
+	user_ids.append(user.id)
+
+	id: int
+	keys = []
+	for id in user_ids:
+		user = User.objects.filter(id=id).first()
+		if user is None:
+			return HttpResponseBadRequest('The requested user does not exist.')
+		keys.append({
+			'public_key_b64': base64.b64encode(user.public_key).decode('ascii'), # Dumb library gives base64 output as bytes, so we must decode it.
+			'user_id': id,
+		})
+
+	return JsonResponse(keys, safe=False) # safe=False: "Before the 5th edition of ECMAScript it was possible to poison the JavaScript Array constructor."
