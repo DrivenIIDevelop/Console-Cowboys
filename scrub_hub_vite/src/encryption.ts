@@ -1,4 +1,5 @@
 import OpenCrypto from 'opencrypto'
+import { fromBase64 } from './base64';
 
 const encoder = new TextEncoder();
 const salt = encoder.encode('ppkpdsaltscrubhub');
@@ -41,6 +42,16 @@ export async function decryptPrivateKey(key: string, password: string): Promise<
 		usages: ['decrypt', 'unwrapKey'],
 		isExtractable: true
 	});
+}
+
+export async function getCurrentPrivateKey(): Promise<CryptoKey> {
+	// TODO: Better way to handle private key
+	const keyText = localStorage.getItem('key');
+	if (keyText === null)
+		throw 'Could not get private key'
+	const keyData = fromBase64(keyText);
+
+	return crypto.subtle.importKey('pkcs8', keyData, rsaParams, false, ['decrypt']);
 }
 
 export async function generateConversationKey() {

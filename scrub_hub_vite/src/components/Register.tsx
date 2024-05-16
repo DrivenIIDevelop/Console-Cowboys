@@ -3,6 +3,7 @@ import Cookies from 'universal-cookie';
 import scrubHubLogo from "../assets/scrubHubLogo.png"
 import scrubPeople from "../assets/scrubPeople.png"
 import refresh from "../assets/refresh.png"
+import { generateKeys } from '../encryption';
 
 const cookies = new Cookies();
 
@@ -27,14 +28,28 @@ const Register = () => {
 				setError("Please accept the terms and conditions")
 				return;
 			}
+
+			const keys = await generateKeys(password);
+
+			const postData = new FormData();
+			postData.append('email', email);
+			postData.append('password', password);
+			postData.append('confirm_password', confirm_password);
+			postData.append('first_name', first_name);
+			postData.append('last_name', last_name);
+			postData.append('phone_number', phone_number);
+			postData.append('employee_id', employee_id);
+			postData.append('registration_code', registration_code);
+			postData.append('public_key', new Blob([keys.public]));
+			postData.append('private_key', keys.private);
+
 			const response = await fetch("/authenticate/register/", {
 				method: "POST",
 				headers: {
-					"Content-Type": "application/json",
 					"X-CSRFToken": cookies.get("csrftoken"),
 				},
 				credentials: "same-origin",
-				body: JSON.stringify({ email, password, confirm_password, first_name, last_name, phone_number, employee_id, registration_code }),
+				body: postData,
 			});
 
 			const data = await response.json();

@@ -1,3 +1,4 @@
+import { fromBase64, toBase64 } from "../base64";
 import { ChatProps, MessageProps } from "../components/ChatComponent";
 import { ConversationListProps, ConversationProps } from "../components/ConversationListComponent";
 
@@ -8,15 +9,6 @@ function isUser(obj?: {[key: string]: unknown}): obj is User {
 		typeof obj.name === 'string' &&
 		typeof obj.id === 'number'
 	);
-}
-
-export function toBase64(data: ArrayBuffer) {
-	// TypeScript would complain that we aren't passing in a number[]. But, this does work.
-	const str = String.fromCharCode.apply(null, new Uint8Array(data) as unknown as number[]);
-	return window.btoa(str); // Why this expects a string and not ArrayBuffer, I don't know.
-}
-function fromBase64(data: string) {
-	return Uint8Array.from(atob(data), c => c.charCodeAt(0));
 }
 
 // Message level

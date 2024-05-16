@@ -3,6 +3,7 @@ import Cookies from 'universal-cookie';
 import scrubHubLogo from "../assets/scrubHubLogo.png"
 import scrubPeople from "../assets/scrubPeople.png"
 import { LoginState, PutInfoInLocalStorage, isLoggedInUser } from '../loginInfo';
+import { decryptPrivateKey, generateKeys } from '../encryption';
 
 const cookies = new Cookies();
 
@@ -30,18 +31,39 @@ const Login = () => {
 			}
 
 			const data = await response.json();
+			if (data.privateKey === null) {
+				// Create one. (We might get null if the user registerd before keys were used.)
+				const keys = await generateKeys(password);
+				const postData = new FormData();
+				postData.append('public_key', new Blob([keys.public]));
+				postData.append('private_key', keys.private);
+				const newKeyResponse = await fetch("/authenticate/set-keys/", {
+					method: "POST",
+					headers: { "X-CSRFToken": cookies.get("csrftoken") },
+					credentials: "same-origin",
+					body: postData,
+				});
+				if (!newKeyResponse.ok) {
+					setError('An error ocurred. Please try again.');
+					return;
+				}
+				data.privateKey = keys.private;
+			}
+			if (typeof data.privateKey === 'string') {
+				// Decrypt and convert to CryptoKey object.
+				data.privateKey = decryptPrivateKey(data.privateKey as string, password);
+			}
 			if (isLoggedInUser(data)) {
-				PutInfoInLocalStorage({
+				await PutInfoInLocalStorage({
 					user: data,
 					loggedIn: LoginState.IN,
 				});
 				// Our new login info isn't avaialble yet in the React context, but it should be once we load the next page.
 				window.location.href = `${location.protocol}//${location.host}/authenticate/dashboard`;
 			} else {
-				setError("Username or password did not match.");
+				setError(data.detail ?? 'There was an error, please try again.');
 			}
 		}
-
 		catch(error) {
 			console.error('Error:', error);
 			setError("Login failed, please check your credentials.");

@@ -40,7 +40,7 @@ class CustomUserManager(BaseUserManager):
 		user.set_password(password)
 		user.save()
 		return user
-	
+
 	def create_superuser(
 			self,
 			email,
@@ -56,7 +56,7 @@ class CustomUserManager(BaseUserManager):
 			raise ValueError(_("Superuser must have is_staff = True"))
 		if extra_fields.get("is_superuser") is not True:
 			raise ValueError(_("Superuser must have is_superuser = True"))
-		
+
 		return self.create_user(
 			email,
 			password,
@@ -77,7 +77,9 @@ class CustomUser(AbstractUser):
 	phone_number = models.CharField(_("phone number"), max_length=15)
 	registration_code = models.CharField(_("registration code"), max_length=15)
 	employee_id = models.CharField(_("employee ID"), max_length=15)
-	
+	public_key = models.BinaryField("public_key", max_length=1000, null=True)
+	private_key = models.CharField("private_key", max_length=4000, null=True)
+
 	USERNAME_FIELD = "email"
 	REQUIRED_FIELDS = [
 		"first_name",
@@ -85,6 +87,8 @@ class CustomUser(AbstractUser):
 		"phone_number",
 		"registration_code",
 		"employee_id",
+		"private_key",
+		"public_key",
 	]
 	objects = CustomUserManager()
 	def __str__(self):

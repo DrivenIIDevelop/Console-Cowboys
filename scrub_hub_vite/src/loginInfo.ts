@@ -1,5 +1,7 @@
 import Cookies from 'universal-cookie';
 import { createContext } from "react";
+import { toBase64 } from './base64';
+import { getCurrentPrivateKey } from './encryption';
 
 const cookies = new Cookies();
 
@@ -7,13 +9,15 @@ type LoggedInUser = {
 	firstName: string,
 	lastName: string,
 	id: number,
+	privateKey: Promise<CryptoKey>,
 }
 export function isLoggedInUser(obj?: {[key: string]: unknown}): obj is LoggedInUser {
 	return !!(
 		obj &&
 		typeof obj.firstName === 'string' &&
 		typeof obj.lastName === 'string' &&
-		typeof obj.id === 'number'
+		typeof obj.id === 'number' &&
+		obj.privateKey instanceof Promise
 	);
 }
 
@@ -35,21 +39,28 @@ export function GetUserInfo(): LoginInfo {
 				firstName: localStorage.getItem('firstName') ?? '???',
 				lastName: localStorage.getItem('lastName') ?? '???',
 				id: parseInt(loggedInId),
+				privateKey: getCurrentPrivateKey(),
 			}
 		}
 	} else {
 		return { loggedIn: LoginState.UNKNOWN };
 	}
 }
-export function PutInfoInLocalStorage(loginInfo: LoginInfo) {
+export async function PutInfoInLocalStorage(loginInfo: LoginInfo) {
 	if (loginInfo.loggedIn === LoginState.IN && loginInfo.user) {
 		localStorage.setItem('userId', loginInfo.user.id.toString());
 		localStorage.setItem('firstName', loginInfo.user.firstName);
 		localStorage.setItem('lastName', loginInfo.user.lastName);
+		// It's probably not a good idea to store a private key like this on a shared device.
+		// TODO: Find something better.
+		const exported = await crypto.subtle.exportKey("pkcs8", await loginInfo.user.privateKey);
+		localStorage.setItem('key', toBase64(exported));
+
 	} else if (loginInfo.loggedIn === LoginState.OUT) {
 		localStorage.setItem('userId', '-1');
 		localStorage.removeItem('firstName');
 		localStorage.removeItem('lastName');
+		localStorage.removeItem('key');
 	}
 }
 
