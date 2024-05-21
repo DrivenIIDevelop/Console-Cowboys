@@ -6,7 +6,7 @@ import { IncomingConversationDetails, IncomingMessage, OutgoingMessage, User, is
 import { encryptKey, generateConversationKey, getPublicKeyFromBase64 } from '../encryption';
 
 import Cookies from 'universal-cookie';
-import { LoginContext, LoginState } from '../loginInfo';
+import { EnsureLoggedIn, LoginContext } from '../loginInfo';
 const cookies = new Cookies();
 
 export type MessageProps = {
@@ -78,7 +78,7 @@ export type ChatProps = {
 	createdHandler?: (old_id: number, new_id: number) => void,
 };
 export function ChatComponent({ participants, messages, conversation_id, encryptionKey, createdHandler }: ChatProps) {
-	const userInfo = useContext(LoginContext);
+	const userInfo = EnsureLoggedIn(useContext(LoginContext));
 	const [messagesState, setMsgs] = useState<MessageProps[]>(messages);
 	const [userMessage, setMessageInput] = useState('');
 	// eslint-disable-next-line prefer-const
@@ -105,12 +105,6 @@ export function ChatComponent({ participants, messages, conversation_id, encrypt
 		}
 	);
 
-	if (!userInfo.user || userInfo.loggedIn !== LoginState.IN) {
-		// This shouldn't ever happen. Django would redirect us first.
-		window.location.href = `${location.protocol}//${location.host}/authenticate/login`;
-		throw 'Not logged in';
-	}
-
 	function scrollToBottom() {
 		const container = document.getElementById('messageContainer');
 		if (container) {
@@ -130,7 +124,7 @@ export function ChatComponent({ participants, messages, conversation_id, encrypt
 
 		// On first message, create conversation
 		if (conversation_id < 0) {
-			const chat = await createConversation(participants, await userInfo.user!.privateKey);
+			const chat = await createConversation(participants, await userInfo.privateKey);
 			setKey(keyState = chat.encryptionKey);
 			createdHandler?.(conversation_id, chat.conversation_id);
 			sendJsonMessage({

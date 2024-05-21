@@ -4,7 +4,7 @@ import styles from './chat.module.css';
 
 import { CiSearch } from "react-icons/ci"
 import { IncomingConversationDetails, User, isIncomingConversationDetailsData } from '../models/chat';
-import { LoginContext, LoginState } from '../loginInfo';
+import { EnsureLoggedIn, LoginContext } from '../loginInfo';
 
 export type ConversationProps = {
 	participants: User[],
@@ -31,15 +31,9 @@ export type ConversationListProps = {
 	available_users: User[],
 }
 export default function ConversationListComponent({ conversations, available_users }: ConversationListProps) {
-	const userInfo = useContext(LoginContext);
+	const userInfo = EnsureLoggedIn(useContext(LoginContext));
 	const [activeConversation, setConversation] = useState<ChatProps | undefined>();
 	const [nextTemporaryId, setTempId] = useState(-1);
-
-	if (!userInfo.user || userInfo.loggedIn !== LoginState.IN) {
-		// This shouldn't ever happen. Django would redirect us first.
-		window.location.href = `${location.protocol}//${location.host}/authenticate/login`;
-		throw 'Not logged in';
-	}
 
 	async function conversationClick(url_path: string): Promise<ChatProps> {
 		const spinner = document.getElementById('messagesSpinner');
@@ -53,7 +47,7 @@ export default function ConversationListComponent({ conversations, available_use
 		}
 		const data = await response.json();
 		if (isIncomingConversationDetailsData(data)) {
-			return new IncomingConversationDetails(data, await userInfo.user!.privateKey).toProps();
+			return new IncomingConversationDetails(data, await userInfo.privateKey).toProps();
 		} else {
 			alert('error');
 			throw 'Bad conversation data';

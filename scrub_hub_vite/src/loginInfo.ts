@@ -87,4 +87,21 @@ export async function LogOut() {
 	}
 }
 
+/**
+ * If the user is logged in, returns the LoggedInUser object from the given LoginInfo.
+ * Throw an exception and redirecto to login page if the user is not logged in.
+ *
+ * Note that although login-protected pages should be unavailable to users who aren't logged in,
+ * a user being logged in does not strictly imply that a LoggedInUser object is available.
+ * This is because the information is populated from localStorage. Thus, login-protected pages
+ * should use this function instead of assuming that info.user is not undefined.
+ */
+export function EnsureLoggedIn(info: LoginInfo): LoggedInUser {
+	if (!info.user || info.loggedIn !== LoginState.IN) {
+		window.location.href = `${location.protocol}//${location.host}/authenticate/login`;
+		throw 'Not logged in';
+	}
+	return info.user;
+}
+
 export const LoginContext = createContext<LoginInfo>({ loggedIn: LoginState.UNKNOWN });

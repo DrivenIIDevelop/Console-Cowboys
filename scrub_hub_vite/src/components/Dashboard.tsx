@@ -1,15 +1,10 @@
 import doctors from '../assets/doctors.png';
 import email from '../assets/email.png';
 import { useContext } from 'react';
-import { LoginContext, LoginState } from '../loginInfo';
+import { EnsureLoggedIn, LoginContext } from '../loginInfo';
 
 const Dashboard = () => {
-	const loginInfo = useContext(LoginContext);
-	if (!loginInfo.user || loginInfo.loggedIn !== LoginState.IN) {
-		// This shouldn't ever happen. Django would redirect us first.
-		window.location.href = `${location.protocol}//${location.host}/authenticate/login`;
-		throw 'Not logged in';
-	}
+	const userInfo = EnsureLoggedIn(useContext(LoginContext));
 
 	return (
 		<div className='absolute top-[100px] left-[105px] right-0 bottom-0'>
@@ -19,7 +14,7 @@ const Dashboard = () => {
 						<div className='flex-1 flex-col flex justify-center'>
 							<div className='-translate-y-4'>
 								<p className='text-[22px]'>Welcome Back!</p>
-								<p className='text-[32px] text-white'>Dr. {loginInfo.user.firstName} {loginInfo.user.lastName}</p>
+								<p className='text-[32px] text-white'>Dr. {userInfo.firstName} {userInfo.lastName}</p>
 							</div>
 						</div>
 						<div className='flex-1'>

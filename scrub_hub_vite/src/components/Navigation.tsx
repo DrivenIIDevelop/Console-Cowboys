@@ -10,15 +10,13 @@ import scrubHubLogo from "../assets/scrubHubLogoMenu.png";
 import notification from "../assets/notification.png";
 import profilePic from "../assets/profilePic.png";
 import { useContext } from "react";
-import { LogOut, LoginContext, LoginState } from "../loginInfo";
+import { EnsureLoggedIn, LogOut, LoginContext } from "../loginInfo";
 
 export default function Navigation() {
-	const loginInfo = useContext(LoginContext);
-	if (!loginInfo.user || loginInfo.loggedIn !== LoginState.IN) {
-		// This shouldn't ever happen. Django would redirect us first.
-		window.location.href = `${location.protocol}//${location.host}/authenticate/login`;
-		throw 'Not logged in';
-	}
+	// I am assuming for now that all pages containing the Navigation component require the user to be logged in.
+	// At the time of writing, this is true.
+	// Also, the pages that this component provides links to definitely require a user to be logged in.
+	const userInfo = EnsureLoggedIn(useContext(LoginContext));
 
 	return (
 		<div className="relative h-screen">
@@ -48,6 +46,7 @@ export default function Navigation() {
 					</li>
 				</ul>
 			</div>
+			{/* top bar */}
 			<div className="absolute top-0 w-screen h-[100px] pl-[105px] bg-white flex items-center px-4 shadow-sm z-9">
 				<div className="flex-1 pl-4">
 					<img src={scrubHubLogo}/>
@@ -61,7 +60,7 @@ export default function Navigation() {
 					<div className="ml-16 flex items-center">
 						<div className="border-2 border-[#63C7B2] rounded-[15px] overflow-hidden flex items-center py-2 px-2">
 							<img className="w-[32px] h-[32px] object-cover" src={profilePic} alt="Profile"/>
-							<div className="px-2 text-[16px]">Dr. {loginInfo.user.firstName} {loginInfo.user.lastName}</div>
+							<div className="px-2 text-[16px]">Dr. {userInfo.firstName} {userInfo.lastName}</div>
 						</div>
 					</div>
 				</div>
