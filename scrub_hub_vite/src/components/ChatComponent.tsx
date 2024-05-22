@@ -2,12 +2,10 @@ import { useContext, useEffect, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import styles from './chat.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
 import { FaArrowRight } from 'react-icons/fa';
-import { IncomingConversationDetails, IncomingMessage, OutgoingMessage, User, isIncomingConversationDetailsData, isIncomingMessageData, isPublicKeyInfoArray } from '../models/chat';
-import { encryptKey, generateConversationKey, getPublicKeyFromBase64 } from '../encryption';
+import { OutgoingMessage, User, createNewConversation, parseWebSocketMessage } from '../models/chat';
 
-import Cookies from 'universal-cookie';
 import { EnsureLoggedIn, LoginContext } from '../loginInfo';
-const cookies = new Cookies();
+import { isError } from '../models/types';
 
 export type MessageProps = {
 	message: string,
@@ -27,47 +25,6 @@ function MessageComponent({ message, username, time, unconfirmed } : MessageProp
 			<p>{message}</p>
 		</div>
 	</div>
-}
-
-async function createConversation(participants: User[], privateKey: CryptoKey): Promise<ChatProps> {
-	// Get public keys for participants
-	const publicKeysResponse = await fetch('get-keys/', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'X-CSRFToken': cookies.get('csrftoken'),
-		},
-		body: JSON.stringify(participants.map((p) => p.id)),
-	});
-	if (!publicKeysResponse.ok)
-		throw 'Error while creating conversaiton';
-	const publicKeys = await publicKeysResponse.json();
-	if (!isPublicKeyInfoArray(publicKeys))
-		throw 'Error while creating conversaiton';
-
-	// Encrypt a key for this conversation, using public keys
-	const conversationKey = await generateConversationKey();
-	const keyEncrypted = new FormData();
-	for (const keyInfo of publicKeys) {
-		keyEncrypted.append(
-			keyInfo.user_id.toString(),
-			new Blob([await encryptKey(await getPublicKeyFromBase64(keyInfo.public_key_b64), conversationKey)])
-		);
-	}
-
-	// Upload
-	const response = await fetch('start/', {
-		method: 'POST',
-		headers: {
-			"X-CSRFToken": cookies.get("csrftoken"),
-		},
-		body: keyEncrypted,
-	});
-	const data = await response.json();
-	if (isIncomingConversationDetailsData(data))
-		return new IncomingConversationDetails(data, privateKey).toProps();
-	else
-		throw 'Error while creating conversation'; // TODO: Handle
 }
 
 export type ChatProps = {
@@ -91,15 +48,21 @@ export function ChatComponent({ participants, messages, conversation_id, encrypt
 			onOpen: () => console.log('open'),
 			onClose: () => console.log('close'),
 			onMessage: async (event) => {
-				const data = JSON.parse(event.data);
-				if (isIncomingMessageData(data)) {
-					addMessage(await new IncomingMessage(data, keyState!).toProps());
-				} else if (typeof data.received === 'number') {
-					messagesState[data.received].unconfirmed = false;
-				} else {
-					console.log('invalid data received');
-					console.log(data);
+				if (keyState === undefined)
+					throw 'No key'; // should not be possible
+
+				const data = parseWebSocketMessage(event.data, keyState);
+				if (isError(data)) {
+					console.log(event.data);
+					throw data.error;
 				}
+
+				// We might receive info about a new message
+				if (data.message)
+					addMessage(await data.message.toProps());
+				// or we might receive confirmation that a message we sent was received
+				else if (data.received !== undefined)
+					messagesState[data.received].unconfirmed = false;
 			},
 			shouldReconnect: () => false,
 		}
@@ -124,7 +87,9 @@ export function ChatComponent({ participants, messages, conversation_id, encrypt
 
 		// On first message, create conversation
 		if (conversation_id < 0) {
-			const chat = await createConversation(participants, await userInfo.privateKey);
+			const chat = await createNewConversation(participants, await userInfo.privateKey);
+			if (isError(chat))
+				throw chat.error; // TODO: Handle
 			setKey(keyState = chat.encryptionKey);
 			createdHandler?.(conversation_id, chat.conversation_id);
 			sendJsonMessage({

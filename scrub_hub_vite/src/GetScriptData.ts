@@ -9,3 +9,10 @@ export default function GetScriptData(scriptId: string = '_DjangoData_'): { [key
 	// Since the text content is a string we must parse it.
 	return JSON.parse(rawData ?? '{}');
 }
+
+export function GetScriptDataAsString(scriptId: string = '_DjangoData_'): string {
+	// We get the HTML document's script element and it's text content.
+	const rawData = document.getElementById(scriptId)?.textContent;
+	// Since the text content is a string we must parse it.
+	return rawData ?? '{}';
+}

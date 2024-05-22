@@ -1,10 +1,14 @@
 import { fromBase64, toBase64 } from "../base64";
 import { ChatProps, MessageProps } from "../components/ChatComponent";
 import { ConversationListProps, ConversationProps } from "../components/ConversationListComponent";
+import Cookies from 'universal-cookie';
+import { encryptKey, generateConversationKey, getPublicKeyFromBase64 } from "../encryption";
+import { Anything, ErrorResult } from "./types";
+const cookies = new Cookies();
 
 export type User = { name: string, id: number };
-function isUser(obj?: {[key: string]: unknown}): obj is User {
-	return !!(
+function isUser(obj: Anything): obj is User {
+	return Boolean(
 		obj &&
 		typeof obj.name === 'string' &&
 		typeof obj.id === 'number'
@@ -39,7 +43,7 @@ type IncomingMessageData = {
 	time: string, // must be convertable to Date
 	iv: string,
 }
-export function isIncomingMessageData(obj?: {[key: string]: unknown}): obj is IncomingMessageData {
+function isIncomingMessageData(obj: Anything): obj is IncomingMessageData {
 	if (!(
 		obj &&
 		typeof obj.message === 'string' &&
@@ -52,7 +56,7 @@ export function isIncomingMessageData(obj?: {[key: string]: unknown}): obj is In
 	return !isNaN(new Date(obj.time).valueOf());
 }
 
-export class IncomingMessage {
+class IncomingMessage {
 	public constructor(private data: IncomingMessageData, private key: CryptoKey) { }
 
 	private async decryptMessage() {
@@ -75,6 +79,20 @@ export class IncomingMessage {
 	}
 }
 
+type WSMessage = {
+	message?: IncomingMessage
+	received?: number
+}
+export function parseWebSocketMessage(json: string, key: CryptoKey): WSMessage | ErrorResult {
+	const parsed = JSON.parse(json);
+	if (typeof parsed.received === 'number') {
+		return { received: parsed.received };
+	} else if (isIncomingMessageData(parsed))
+		return { message: new IncomingMessage(parsed, key) };
+	else
+		return { error: 'invalid data received' };
+}
+
 // Conversation level
 async function getConversationKeyFromBase64(dataBase64: string, privateKey: CryptoKey) {
 	const bytes = fromBase64(dataBase64);
@@ -88,8 +106,8 @@ type IncomingConversationDetailsData = {
 	conversation_id: number,
 	key: string,
 }
-export function isIncomingConversationDetailsData(obj?: {[key: string]: unknown}): obj is IncomingConversationDetailsData {
-	return !!(
+function isIncomingConversationDetailsData(obj?: Record<string, unknown> | null): obj is IncomingConversationDetailsData {
+	return Boolean(
 		obj &&
 		obj.participants instanceof Array &&
 		obj.participants.every((p) => isUser(p)) &&
@@ -98,7 +116,8 @@ export function isIncomingConversationDetailsData(obj?: {[key: string]: unknown}
 		typeof obj.key === 'string'
 	);
 }
-export class IncomingConversationDetails {
+
+class IncomingConversationDetails {
 	public constructor(private data: IncomingConversationDetailsData, private privateKey: CryptoKey) { }
 
 	public async toProps(): Promise<ChatProps> {
@@ -115,6 +134,57 @@ export class IncomingConversationDetails {
 		};
 	}
 }
+export async function createNewConversation(participants: User[], privateKey: CryptoKey): Promise<ChatProps | ErrorResult> {
+	// Get public keys for participants
+	const publicKeysResponse = await fetch('get-keys/', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'X-CSRFToken': cookies.get('csrftoken'),
+		},
+		body: JSON.stringify(participants.map((p) => p.id)),
+	});
+	if (!publicKeysResponse.ok)
+		return { error: 'Error while creating conversaiton' };
+	const publicKeys = await publicKeysResponse.json();
+	if (!isPublicKeyInfoArray(publicKeys))
+		return { error: 'Error while creating conversaiton' };
+
+	// Encrypt a key for this conversation, using public keys
+	const conversationKey = await generateConversationKey();
+	const keyEncrypted = new FormData();
+	for (const keyInfo of publicKeys) {
+		keyEncrypted.append(
+			keyInfo.user_id.toString(),
+			new Blob([await encryptKey(await getPublicKeyFromBase64(keyInfo.public_key_b64), conversationKey)])
+		);
+	}
+
+	// Upload
+	const response = await fetch('start/', {
+		method: 'POST',
+		headers: { "X-CSRFToken": cookies.get("csrftoken") },
+		body: keyEncrypted,
+	});
+	const data = await response.json();
+	if (isIncomingConversationDetailsData(data))
+		return await new IncomingConversationDetails(data, privateKey).toProps();
+	else
+		return { error: 'Error while creating conversaiton' };
+}
+export async function getConversation(id: number, privateKey: CryptoKey): Promise<ChatProps | ErrorResult> {
+	const response = await fetch(`/messages/${id}`);
+
+	if (!response.ok)
+		return { error: 'Bad conversation request' };
+
+	const data = await response.json();
+	if (isIncomingConversationDetailsData(data))
+		return new IncomingConversationDetails(data, privateKey).toProps();
+	else
+		return { error: 'Bad conversation request' };
+}
+
 
 type IncomingConversationOverviewData = {
 	participants: User[],
@@ -122,15 +192,15 @@ type IncomingConversationOverviewData = {
 	id: number,
 	key: string,
 }
-function isIncomingConversationOverviewData(obj?: {[key: string]: unknown}): obj is IncomingConversationOverviewData {
+function isIncomingConversationOverviewData(obj: Anything): obj is IncomingConversationOverviewData {
 	return !!(
 		obj &&
 		obj.participants instanceof Array &&
 		obj.participants.every((p) => isUser(p)) &&
 		typeof obj.last_message === 'object' && obj.last_message &&
-		// Every object matches type {[key: string]: unknown}, but TypeScript complains if we do not explicitly cast it.
+		// Every object matches type Anything, but TypeScript complains if we do not explicitly cast it.
 		// "Index signature missing": sure, but that just means indexing would return undefined, which fits unknown.
-		isIncomingMessageData(obj.last_message as {[key: string]: unknown}) &&
+		isIncomingMessageData(obj.last_message as Anything) &&
 		typeof obj.id === 'number' &&
 		typeof obj.key === 'string'
 	);
@@ -153,8 +223,8 @@ type IncomingConversationListData = {
 	conversations: IncomingConversationOverviewData[],
 	available_users: User[],
 }
-export function isIncomingConversationListData(obj?: {[key: string]: unknown}): obj is IncomingConversationListData {
-	return !!(
+function isIncomingConversationListData(obj: Anything): obj is IncomingConversationListData {
+	return Boolean(
 		obj &&
 		obj.conversations instanceof Array &&
 		obj.conversations.every(isIncomingConversationOverviewData) &&
@@ -162,7 +232,7 @@ export function isIncomingConversationListData(obj?: {[key: string]: unknown}): 
 		obj.available_users.every((u) => isUser(u))
 	);
 }
-export class IncomingConversationList {
+class IncomingConversationList {
 	public constructor(private data: IncomingConversationListData, private privateKey: CryptoKey) { }
 
 	public async toProps(): Promise<ConversationListProps> {
@@ -176,19 +246,26 @@ export class IncomingConversationList {
 		};
 	}
 }
+export function parseJsonAsIncomingConversationList(json: string, privateKey: CryptoKey): IncomingConversationList | null {
+	const parsed = JSON.parse(json);
+	if (isIncomingConversationListData(parsed))
+		return new IncomingConversationList(parsed, privateKey)
+	else
+		return null;
+}
 
 type PublicKeyInfo = {
 	public_key_b64: string,
 	user_id: number,
 }
-function isPublicKeyInfo(obj?: {[key: string]: unknown}): obj is PublicKeyInfo {
-	return !!(
+function isPublicKeyInfo(obj: Anything): obj is PublicKeyInfo {
+	return Boolean(
 		obj &&
 		typeof obj.public_key_b64 === 'string' &&
 		typeof obj.user_id === 'number'
 	);
 }
-export function isPublicKeyInfoArray(obj?: unknown): obj is PublicKeyInfo[] {
+function isPublicKeyInfoArray(obj?: unknown): obj is PublicKeyInfo[] {
 	return !!(
 		obj &&
 		obj instanceof Array &&

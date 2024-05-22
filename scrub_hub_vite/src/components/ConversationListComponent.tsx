@@ -3,8 +3,9 @@ import ChatComponent, { ChatProps, MessageProps } from './ChatComponent';
 import styles from './chat.module.css';
 
 import { CiSearch } from "react-icons/ci"
-import { IncomingConversationDetails, User, isIncomingConversationDetailsData } from '../models/chat';
+import { User, getConversation } from '../models/chat';
 import { EnsureLoggedIn, LoginContext } from '../loginInfo';
+import { isError } from '../models/types';
 
 export type ConversationProps = {
 	participants: User[],
@@ -35,23 +36,17 @@ export default function ConversationListComponent({ conversations, available_use
 	const [activeConversation, setConversation] = useState<ChatProps | undefined>();
 	const [nextTemporaryId, setTempId] = useState(-1);
 
-	async function conversationClick(url_path: string): Promise<ChatProps> {
+	async function loadConversation(id: number): Promise<ChatProps> {
 		const spinner = document.getElementById('messagesSpinner');
 		if (spinner) spinner.hidden = false;
-		const response = await fetch(`/messages/${url_path}`);
+		const conversation = await getConversation(id, await userInfo.privateKey);
 		if (spinner) spinner.hidden = true;
 
-		if (!response.ok) {
+		if (isError(conversation)) {
 			alert('error');
 			throw 'Bad conversation request';
 		}
-		const data = await response.json();
-		if (isIncomingConversationDetailsData(data)) {
-			return new IncomingConversationDetails(data, await userInfo.privateKey).toProps();
-		} else {
-			alert('error');
-			throw 'Bad conversation data';
-		}
+		return conversation;
 	}
 
 	async function openConversation(conversaiton: ConversationProps) {
@@ -63,7 +58,7 @@ export default function ConversationListComponent({ conversations, available_use
 				participants: conversaiton.participants,
 			}
 		} else
-			chat = await conversationClick(conversaiton.id.toString());
+			chat = await loadConversation(conversaiton.id);
 		console.log(chat.conversation_id);
 		setConversation(chat);
 	}

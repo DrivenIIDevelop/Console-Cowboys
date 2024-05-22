@@ -3,20 +3,22 @@ import 'vite/modulepreload-polyfill';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import '../index.css';
-import GetScriptData from '../GetScriptData.ts';
+import { GetScriptDataAsString } from '../GetScriptData.ts';
 import ConversationListComponent from '../components/ConversationListComponent.tsx';
 import PageWrapper from '../components/PageWrapper.tsx';
-import { IncomingConversationList, isIncomingConversationListData } from '../models/chat.ts';
-import { GetUserInfo } from '../loginInfo.ts';
+import { parseJsonAsIncomingConversationList } from '../models/chat.ts';
+import { EnsureLoggedIn, GetUserInfo } from '../loginInfo.ts';
 
 const container: HTMLElement & { reactRoot?: ReactDOM.Root } = document.getElementById('root')!;
 if (!container.reactRoot) {
-	const root = container.reactRoot = ReactDOM.createRoot(container);
-	const data = GetScriptData();
-	if (!isIncomingConversationListData(data))
-		throw 'Invalid data';
-	const props = await new IncomingConversationList(data, await GetUserInfo().user!.privateKey).toProps();
+	const userInfo = EnsureLoggedIn(GetUserInfo());
 
+	const conversationList = parseJsonAsIncomingConversationList(GetScriptDataAsString(), await userInfo.privateKey);
+	if (!conversationList)
+		throw 'Invalid data';
+	const props = await conversationList.toProps();
+
+	const root = container.reactRoot = ReactDOM.createRoot(container);
 	root.render(
 		<React.StrictMode>
 			<PageWrapper>
