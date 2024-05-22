@@ -40,6 +40,7 @@ export function ChatComponent({ participants, messages, conversation_id, encrypt
 	const [userMessage, setMessageInput] = useState('');
 	// eslint-disable-next-line prefer-const
 	let [keyState, setKey] = useState(encryptionKey);
+	const [conversationIdState, setConversationId] = useState(conversation_id);
 	// Confusingly, the state won't get updated when we update the props. So we need an effect.
 	useEffect(() => setMsgs(messages), [messages]);
 
@@ -86,12 +87,13 @@ export function ChatComponent({ participants, messages, conversation_id, encrypt
 			return;
 
 		// On first message, create conversation
-		if (conversation_id < 0) {
+		if (conversationIdState < 0) {
 			const chat = await createNewConversation(participants, await userInfo.privateKey);
 			if (isError(chat))
 				throw chat.error; // TODO: Handle
 			setKey(keyState = chat.encryptionKey);
-			createdHandler?.(conversation_id, chat.conversation_id);
+			setConversationId(chat.conversation_id);
+			createdHandler?.(conversationIdState, chat.conversation_id);
 			sendJsonMessage({
 				'created': chat.conversation_id,
 			});
