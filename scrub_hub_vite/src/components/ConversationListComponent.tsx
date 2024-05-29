@@ -52,6 +52,9 @@ export default function ConversationListComponent({ conversations, available_use
 	async function openConversation(conversaiton: ConversationProps) {
 		let chat: ChatProps;
 		if (conversaiton.id < 0) {
+			// A negative conversation id indicates the conversation hasn't been created yet on the server. (we have a dummy conversation locally)
+			// Thus we can't load it normally. Instead, we create a ChatProps object manually.
+			// We have all the required info: id, participants, and obiously a non-existent conversation has no messages.
 			chat = {
 				conversation_id: conversaiton.id,
 				messages: [],
@@ -59,7 +62,6 @@ export default function ConversationListComponent({ conversations, available_use
 			}
 		} else
 			chat = await loadConversation(conversaiton.id);
-		console.log(chat.conversation_id);
 		setConversation(chat);
 	}
 

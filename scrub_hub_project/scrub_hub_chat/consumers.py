@@ -63,10 +63,13 @@ class ChatConsumer(GroupedConsumer):
 			self.close(401) # This method has a "reason" parameter, but that reason is not visible to the client. Weird.
 			return
 
+		# We'll get the conversation ID from the request URL. Negative value indicates the conversation is not yet initialized.
 		id: int = self.scope['url_route']['kwargs']['conversation_id']
 		if (id >= 0):
 			self.set_conversation(id)
 
+		# Add this consumer instance to a group for this user.
+		# This will allow other consumer instances to send messages to this user, using the same id-as-group-name, to any and all tabs this user has open.
 		self.group_add(str(self.user.id))
 		self.accept()
 

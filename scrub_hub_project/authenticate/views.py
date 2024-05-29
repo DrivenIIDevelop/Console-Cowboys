@@ -55,6 +55,7 @@ def dashboard_view(request):
 def register_view(request):
     if request.method == "POST":
         data: dict = {}
+        # Pull data from the request data.
         expected_fields = [
             'first_name', 'last_name',
             'password', 'confirm_password',
@@ -63,12 +64,15 @@ def register_view(request):
             'public_key', 'private_key',
         ]
         for field in expected_fields:
+            # Ensure the field is present in the request
             data[field] = request.data.get(field)
             if data[field] is None:
                 return JsonResponse({"detail": "Missing information"}, status=400)
             if type(data[field]) == InMemoryUploadedFile:
+                # Binary form data must be "read" before use.
                 data[field] = data[field].read()
 
+        # Validate
         if data['password'] != data['confirm_password']:
             return JsonResponse({"detail": "Passwords do not match!"}, status=400)
         del data['confirm_password']
@@ -76,6 +80,7 @@ def register_view(request):
         if CustomUser.objects.filter(email=data['email']).exists():
             return JsonResponse({"detail": "Username already taken"}, status=400)
 
+        # Create
         user = CustomUser.objects.create_user(**data)
         user.save()
 
@@ -85,6 +90,8 @@ def register_view(request):
 
 @api_view(['POST'])
 def set_keys(request):
+    # This API method is called when the user logs in but does not yet have public/private keys.
+    # The client will generate a new key pair and upload them in the same format as if registering.
     user: CustomUser = request.user
     if not user.is_authenticated:
         return JsonResponse({"detail": "You are not logged in!"}, status=400)

@@ -103,7 +103,7 @@ async function getConversationKeyFromBase64(dataBase64: string, privateKey: Cryp
 type IncomingConversationDetailsData = {
 	participants: User[],
 	messages: IncomingMessageData[],
-	conversation_id: number,
+	id: number,
 	key: string,
 }
 function isIncomingConversationDetailsData(obj?: Record<string, unknown> | null): obj is IncomingConversationDetailsData {
@@ -113,6 +113,7 @@ function isIncomingConversationDetailsData(obj?: Record<string, unknown> | null)
 		obj.participants.every((p) => isUser(p)) &&
 		obj.messages instanceof Array &&
 		obj.messages.every(isIncomingMessageData) &&
+		typeof obj.id === 'number' &&
 		typeof obj.key === 'string'
 	);
 }
@@ -127,7 +128,7 @@ class IncomingConversationDetails {
 			messages.push(await new IncomingMessage(m, key).toProps());
 
 		return {
-			conversation_id: this.data.conversation_id,
+			conversation_id: this.data.id,
 			messages,
 			participants: this.data.participants,
 			encryptionKey: key,
@@ -184,7 +185,6 @@ export async function getConversation(id: number, privateKey: CryptoKey): Promis
 	else
 		return { error: 'Bad conversation request' };
 }
-
 
 type IncomingConversationOverviewData = {
 	participants: User[],

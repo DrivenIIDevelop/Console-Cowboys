@@ -1,6 +1,7 @@
 import datetime
 import base64
-import json
+def b64encode(data: bytes):
+	return base64.b64encode(data).decode('ascii') # Dumb library gives base64 output as bytes, so we must decode it.
 
 from .models import Conversation, ConversationParticipant, Message
 from authenticate.models import CustomUser as User
@@ -10,28 +11,37 @@ from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 
-def get_conversation_data(conversation: Conversation, user_id):
+def get_participants_data(conversation: Conversation, exclude_user_id: int):
+	return [ # list comprehension: for participant
+		{
+			'name': participant.user.get_full_name(),
+			'id': participant.user.id,
+		} for participant in conversation.participants.exclude(user__id=exclude_user_id).all()
+	]
+
+def get_conversation_data(conversation: Conversation, user_id, only_last_message=False):
 	# Ensure given user is a participant
 	user: ConversationParticipant | None = conversation.participants.filter(user__id=user_id)[0]
 	if user is None:
 		raise Exception('The given user id does not belong to the requested conversation.')
 
-	oldest_to_look_for = datetime.datetime.now(datetime.UTC)
-	oldest_to_look_for -= datetime.timedelta(days=30)
-	messages = Message.objects \
-		.filter(conversation__id=conversation.id, date__gte=oldest_to_look_for) \
-		.order_by('-date')[:20]
 	data = {
-		'participants': [
-			{
-				'name': p.user.get_full_name(),
-				'id': p.user.id,
-	 		} for p in conversation.participants.exclude(user__id=user_id).all()],
-		'messages': [m.json_serializable() for m in messages[::-1]],
-		'conversation_id': conversation.id,
-		'key': base64.b64encode(user.encrypted_key).decode('ascii'), # Dumb library gives base64 output as bytes, so we must decode it.
+		'participants': get_participants_data(conversation, user_id),
+		'id': conversation.id,
+		'key': b64encode(user.encrypted_key),
 	}
-	return JsonResponse(data)
+	print(data['participants'])
+	if only_last_message:
+		data['last_message'] = conversation.get_last_message().json_serializable()
+	else:
+		oldest_to_look_for = datetime.datetime.now(datetime.UTC)
+		oldest_to_look_for -= datetime.timedelta(days=30)
+		messages = Message.objects \
+			.filter(conversation__id=conversation.id, date__gte=oldest_to_look_for) \
+			.order_by('-date')[:20]
+		data['messages'] = [m.json_serializable() for m in messages[::-1]]
+
+	return data
 
 @api_view(['GET'])
 def conversation(request, conversation_id):
@@ -42,7 +52,7 @@ def conversation(request, conversation_id):
 		return HttpResponseBadRequest('The conversation does not exist or you are not a part of it.')
 
 	conversation = Conversation.objects.get(id=conversation_id)
-	return get_conversation_data(conversation, user_id)
+	return JsonResponse(get_conversation_data(conversation, user_id))
 
 @api_view(['POST'])
 def make_conversation(request):
@@ -65,7 +75,7 @@ def make_conversation(request):
 		conversation.participants.add(p)
 
 	conversation.save()
-	return get_conversation_data(conversation, user_id)
+	return JsonResponse(get_conversation_data(conversation, user_id))
 
 
 @login_required(login_url='authenticate-login') # This might not be the best way to do this? Idk, but it's easy pz.
@@ -73,18 +83,8 @@ def all_conversations(request):
 	user_id = request.user.id
 	user_conversations = Conversation.objects.filter(participants__user__id=user_id).all()
 
-	existing_conversations = [
-		{
-			'participants': [
-				{
-					'name': p.user.get_full_name(),
-					'id': p.user.id,
-		 		} for p in c.participants.exclude(user__id=user_id).all()],
-			'last_message': c.get_last_message().json_serializable(),
-			'id': c.id,
-			'key': base64.b64encode(c.participants.get(user__id=user_id).encrypted_key).decode('ascii'),
-		} for c in user_conversations
-	]
+	existing_conversations = [get_conversation_data(c, user_id, True) for c in user_conversations]
+
 	# For now, user may start a conversation with any user who they don't already have a conversation with
 	# TODO: This probably should be made better at some point.
 	available_users = []
