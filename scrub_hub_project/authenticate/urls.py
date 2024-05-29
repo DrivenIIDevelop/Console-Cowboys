@@ -8,4 +8,5 @@ urlpatterns = [
 	path('dashboard/', views.dashboard_view, name='authenticate-dashboard'),
 	path('register/', views.register_view, name='authenticate-register'),
 	path('home/', views.home_view, name='authenticate-home'),
+	path('set-keys/', views.set_keys, name='authenticate-set-keys'),
 ]

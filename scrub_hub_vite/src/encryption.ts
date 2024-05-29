@@ -1,4 +1,5 @@
 import OpenCrypto from 'opencrypto'
+import { fromBase64 } from './base64';
 
 const encoder = new TextEncoder();
 const salt = encoder.encode('ppkpdsaltscrubhub');
@@ -8,6 +9,14 @@ const rsaParams: RsaHashedKeyGenParams = {
 	hash: 'SHA-256',
 	modulusLength: 4096,
 	publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+}
+const rsaImportParams: RsaHashedImportParams = {
+	name: 'RSA-OAEP',
+	hash: 'SHA-256',
+}
+const aesKeyParams: AesKeyAlgorithm = {
+	name: 'AES-GCM',
+	length: 256,
 }
 
 /**
@@ -37,4 +46,28 @@ export async function decryptPrivateKey(key: string, password: string): Promise<
 		usages: ['decrypt', 'unwrapKey'],
 		isExtractable: true
 	});
+}
+
+export async function getCurrentPrivateKey(): Promise<CryptoKey> {
+	// TODO: Better way to handle private key
+	const keyText = localStorage.getItem('key');
+	if (keyText === null)
+		throw 'Could not get private key'
+	const keyData = fromBase64(keyText);
+
+	return crypto.subtle.importKey('pkcs8', keyData, rsaParams, false, ['decrypt']);
+}
+
+export async function generateConversationKey() {
+	const key = await crypto.subtle.generateKey(aesKeyParams, true, ['encrypt', 'decrypt']);
+	return await crypto.subtle.exportKey('raw', key);
+}
+
+export async function getPublicKeyFromBase64(dataBase64: string) {
+	const data = fromBase64(dataBase64);
+	return await crypto.subtle.importKey('spki', data, rsaImportParams, false, ['encrypt']);
+}
+
+export async function encryptKey(encryptWith: CryptoKey, keyToEncrypt: ArrayBuffer) {
+	return await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, encryptWith, keyToEncrypt);
 }

@@ -45,6 +45,7 @@ class ChatConsumer(GroupedConsumer):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.ignore = None
+		self.conversation_id = -1
 
 	def get_users_in_conversation(self):
 		users = []
@@ -62,32 +63,44 @@ class ChatConsumer(GroupedConsumer):
 			self.close(401) # This method has a "reason" parameter, but that reason is not visible to the client. Weird.
 			return
 
-		self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
+		# We'll get the conversation ID from the request URL. Negative value indicates the conversation is not yet initialized.
+		id: int = self.scope['url_route']['kwargs']['conversation_id']
+		if (id >= 0):
+			self.set_conversation(id)
+
+		# Add this consumer instance to a group for this user.
+		# This will allow other consumer instances to send messages to this user, using the same id-as-group-name, to any and all tabs this user has open.
+		self.group_add(str(self.user.id))
+		self.accept()
+
+	def set_conversation(self, id):
+		self.conversation_id = id
 		self.get_users_in_conversation()
 		# Validate that this user is part of the conversation
 		if str(self.user.id) not in self.users_in_conversation:
 			self.close(403)
 			return
 
-		self.group_add(str(self.user.id))
-		self.accept()
-
 	def receive_json(self, data):
+		if 'created' in data:
+			self.set_conversation(data['created'])
+			return
+
 		msg_txt: str = data.get('message', None)
+		iv: str = data.get('iv', None)
 		sender_msg_id: int = data.get('id', None)
-		if type(msg_txt) != str or type(sender_msg_id) != int:
+		if type(msg_txt) != str or type(sender_msg_id) != int or type(iv) != str:
 			raise Exception('Invalid data received.')
-		# TODO: Encrypt msg
-		msg_blob = msg_txt.encode()
 
 		message = {
 			'message': msg_txt,
+			'iv': iv,
 			'username': self.user.get_full_name(),
 			'time': str(datetime.datetime.now(datetime.UTC)),
 			'type': 'chat_message', # Tells channels what method to use to handle the group message.
 		}
 		# Add message to database
-		Message(text=msg_blob, conversation_id=self.conversation_id, user=self.user).save()
+		Message(text=msg_txt, iv=iv, conversation_id=self.conversation_id, user=self.user).save()
 
 		# Echo back to the sender so they know it's been received
 		self.send_json({ 'received': sender_msg_id })

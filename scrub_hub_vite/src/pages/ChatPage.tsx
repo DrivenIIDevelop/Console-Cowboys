@@ -3,18 +3,22 @@ import 'vite/modulepreload-polyfill';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import '../index.css';
-import GetScriptData from '../GetScriptData.ts';
+import { GetScriptDataAsString } from '../GetScriptData.ts';
 import ConversationListComponent from '../components/ConversationListComponent.tsx';
-import { isConversationListProps } from '../components/ChatTypes.ts';
 import PageWrapper from '../components/PageWrapper.tsx';
+import { parseJsonAsIncomingConversationList } from '../models/chat.ts';
+import { EnsureLoggedIn, GetUserInfo } from '../loginInfo.ts';
 
 const container: HTMLElement & { reactRoot?: ReactDOM.Root } = document.getElementById('root')!;
 if (!container.reactRoot) {
-	const root = container.reactRoot = ReactDOM.createRoot(container);
-	const props = GetScriptData();
-	if (!isConversationListProps(props))
-		throw 'Invalid props';
+	const userInfo = EnsureLoggedIn(GetUserInfo());
 
+	const conversationList = parseJsonAsIncomingConversationList(GetScriptDataAsString(), await userInfo.privateKey);
+	if (!conversationList)
+		throw 'Invalid data';
+	const props = await conversationList.toProps();
+
+	const root = container.reactRoot = ReactDOM.createRoot(container);
 	root.render(
 		<React.StrictMode>
 			<PageWrapper>

@@ -6,7 +6,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth.decorators import login_required
-# from django.contrib.auth.models import User
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from rest_framework.decorators import api_view
 
 # Create your views here.
 
@@ -19,7 +20,7 @@ def login_view(request):
         data = json.loads(request.body)
         email = data.get("email")
         password = data.get("password")
-        
+
         if email is None or password is None:
             return JsonResponse({"detail":"Please provide username and password"})
         user: CustomUser = authenticate(email=email, password=password)
@@ -30,6 +31,7 @@ def login_view(request):
             'id': user.id,
             'firstName': user.first_name,
             'lastName': user.last_name,
+            'privateKey': user.private_key,
         })
     elif request.method == "GET":
         #Add condition for if already logged in then go to dashboard? Maybe might not need
@@ -49,30 +51,60 @@ def dashboard_view(request):
     return render(request, 'authenticate/dashboard.html')
 
 @ensure_csrf_cookie
+@api_view(['GET', 'POST']) # Required to have request.data
 def register_view(request):
     if request.method == "POST":
-        data = json.loads(request.body)
-        email = data.get("email")
-        password = data.get("password")
-        confirm_password = data.get("confirm_password")
-        first_name = data.get("first_name")
-        last_name = data.get("last_name")
-        phone_number = data.get("phone_number")
-        employee_id = data.get("employee_id")
-        registration_code = data.get("registration_code")
+        data: dict = {}
+        # Pull data from the request data.
+        expected_fields = [
+            'first_name', 'last_name',
+            'password', 'confirm_password',
+            'phone_number', 'email',
+            'employee_id', 'registration_code',
+            'public_key', 'private_key',
+        ]
+        for field in expected_fields:
+            # Ensure the field is present in the request
+            data[field] = request.data.get(field)
+            if data[field] is None:
+                return JsonResponse({"detail": "Missing information"}, status=400)
+            if type(data[field]) == InMemoryUploadedFile:
+                # Binary form data must be "read" before use.
+                data[field] = data[field].read()
 
-        if not all([email, password, confirm_password, first_name, last_name, phone_number, employee_id, registration_code]):
-            return JsonResponse({"detail": "Missing information"}, status=400)
-
-        if password != confirm_password:
+        # Validate
+        if data['password'] != data['confirm_password']:
             return JsonResponse({"detail": "Passwords do not match!"}, status=400)
-        
-        if CustomUser.objects.filter(email=email).exists():
+        del data['confirm_password']
+
+        if CustomUser.objects.filter(email=data['email']).exists():
             return JsonResponse({"detail": "Username already taken"}, status=400)
 
-        user = CustomUser.objects.create_user(email=email, password=password, first_name=first_name, last_name=last_name, phone_number=phone_number, employee_id=employee_id, registration_code=registration_code)
+        # Create
+        user = CustomUser.objects.create_user(**data)
         user.save()
 
         return JsonResponse({"detail": "User successfully registered"}, status=201)
     elif request.method == "GET":
         return render(request, 'authenticate/register.html')
+
+@api_view(['POST'])
+def set_keys(request):
+    # This API method is called when the user logs in but does not yet have public/private keys.
+    # The client will generate a new key pair and upload them in the same format as if registering.
+    user: CustomUser = request.user
+    if not user.is_authenticated:
+        return JsonResponse({"detail": "You are not logged in!"}, status=400)
+    data: dict = {}
+    expected_fields = [ 'public_key', 'private_key' ]
+    for field in expected_fields:
+        data[field] = request.data.get(field)
+        if data[field] is None:
+            return JsonResponse({"detail": "Missing information"}, status=400)
+        if type(data[field]) == InMemoryUploadedFile:
+            data[field] = data[field].read()
+
+    user.public_key = data['public_key']
+    user.private_key = data['private_key']
+    user.save()
+    return JsonResponse({"detail": "success"}, status=200)

@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import styles from './chat.module.css'; // VS Code extension "CSS Modules" by clinyong gives autocomplete support for css modules
-import { isMessageProps } from './ChatTypes';
 import { FaArrowRight } from 'react-icons/fa';
+import { OutgoingMessage, User, createNewConversation, parseWebSocketMessage } from '../models/chat';
+
+import { EnsureLoggedIn, LoginContext } from '../loginInfo';
+import { isError } from '../models/types';
 
 export type MessageProps = {
 	message: string,
@@ -25,21 +28,51 @@ function MessageComponent({ message, username, time, unconfirmed } : MessageProp
 }
 
 export type ChatProps = {
-	participants: string[],
+	participants: User[],
 	messages: MessageProps[],
 	conversation_id: number,
+	encryptionKey?: CryptoKey,
+	createdHandler?: (old_id: number, new_id: number) => void,
 };
-export function ChatComponent({ participants, messages, conversation_id }: ChatProps) {
+export function ChatComponent({ participants, messages, conversation_id, encryptionKey, createdHandler }: ChatProps) {
+	const userInfo = EnsureLoggedIn(useContext(LoginContext));
 	const [messagesState, setMsgs] = useState<MessageProps[]>(messages);
+	const [userMessage, setMessageInput] = useState('');
+	// eslint-disable-next-line prefer-const
+	let [keyState, setKey] = useState(encryptionKey);
+	const [conversationIdState, setConversationId] = useState(conversation_id);
 	// Confusingly, the state won't get updated when we update the props. So we need an effect.
 	useEffect(() => setMsgs(messages), [messages]);
+
+	const { sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/${conversation_id}`,
+		{
+			onOpen: () => console.log('open'),
+			onClose: () => console.log('close'),
+			onMessage: async (event) => {
+				if (keyState === undefined)
+					throw 'No key'; // should not be possible
+
+				const data = parseWebSocketMessage(event.data, keyState);
+				if (isError(data)) {
+					console.log(event.data);
+					throw data.error;
+				}
+
+				// We might receive info about a new message
+				if (data.message)
+					addMessage(await data.message.toProps());
+				// or we might receive confirmation that a message we sent was received
+				else if (data.received !== undefined)
+					messagesState[data.received].unconfirmed = false;
+			},
+			shouldReconnect: () => false,
+		}
+	);
 
 	function scrollToBottom() {
 		const container = document.getElementById('messageContainer');
 		if (container) {
 			container.scrollTop = container.scrollHeight;
-		} else {
-			console.log('no foo');
 		}
 	}
 	scrollToBottom();
@@ -49,29 +82,24 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 		scrollToBottom();
 	}
 
-	const { sendJsonMessage } = useWebSocket(`ws://${window.location.host}/ws/${conversation_id}`,
-		{
-			onOpen: () => console.log('open'),
-			onClose: () => console.log('close'),
-			onMessage: (event) => {
-				const data = JSON.parse(event.data);
-				if (isMessageProps(data)) {
-					addMessage(data);
-				} else if (typeof data.received === 'number') {
-					messagesState[data.received].unconfirmed = false;
-				} else {
-					console.log('invalid data received');
-					console.log(data);
-				}
-			},
-			shouldReconnect: () => false,
-		}
-	);
-
-	const [userMessage, setMessageInput] = useState('');
-	const send = () => {
+	const send = async () => {
 		if (!userMessage)
 			return;
+
+		// On first message, create conversation
+		if (conversationIdState < 0) {
+			const chat = await createNewConversation(participants, await userInfo.privateKey);
+			if (isError(chat))
+				throw chat.error; // TODO: Handle
+			setKey(keyState = chat.encryptionKey);
+			setConversationId(chat.conversation_id);
+			createdHandler?.(conversationIdState, chat.conversation_id);
+			sendJsonMessage({
+				'created': chat.conversation_id,
+			});
+		}
+		if (keyState === undefined)
+			throw 'No key'; // should not be possible
 
 		const message: MessageProps & { id: number } = {
 			message: userMessage,
@@ -80,8 +108,9 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 			unconfirmed: true,
 			id: messagesState.length, // Track when it's been received.
 		};
+		const outgoingMessage = new OutgoingMessage(message.message, message.id, keyState);
+		sendJsonMessage(await outgoingMessage.getData());
 
-		sendJsonMessage(message);
 		addMessage(message);
 		setMessageInput('');
 	};
@@ -92,7 +121,7 @@ export function ChatComponent({ participants, messages, conversation_id }: ChatP
 	return <div className='p-4 flex flex-col h-full'>
 		<div className='flex-grow-0 flex'>
 			<div className='profilePicture' />
-			<p className='flex-grow-0 text-2xl font-bold self-center'>{participants.join(', ')}</p>
+			<p className='flex-grow-0 text-2xl font-bold self-center'>{participants.map((p) => p.name).join(', ')}</p>
 		</div>
 		<div id='messageContainer' className='flex-grow-1 overflow-y-scroll h-full'>
 			{messagesState.map((m, i) => <MessageComponent key={i} {...m} />)}

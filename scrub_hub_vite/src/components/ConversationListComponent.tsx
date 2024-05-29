@@ -1,24 +1,27 @@
-import { useEffect, useState } from 'react';
-import { isChatProps } from './ChatTypes';
-import ChatComponent, { ChatProps } from './ChatComponent';
+import { useContext, useState } from 'react';
+import ChatComponent, { ChatProps, MessageProps } from './ChatComponent';
 import styles from './chat.module.css';
 
 import { CiSearch } from "react-icons/ci"
+import { User, getConversation } from '../models/chat';
+import { EnsureLoggedIn, LoginContext } from '../loginInfo';
+import { isError } from '../models/types';
 
 export type ConversationProps = {
-	participants: string[],
-	last_message_time?: Date,
-	last_message?: string,
+	participants: User[],
+	last_message?: MessageProps,
 	id: number,
 }
-function ConversationComponent({ participants, last_message_time, last_message }: ConversationProps) {
-	return <div className='relative border-2 border-black p-3'>
-		<p className='absolute right-1 top-0 text-sm text-gray-900'>{last_message_time?.toLocaleTimeString()}</p> {/* TODO: Format as "2min ago" */}
+function ConversationComponent({ participants, last_message }: ConversationProps) {
+	return <div className='relative border-2 border-black p-3 h-26'>
+		<p className='absolute right-1 top-0 text-sm text-gray-900'>{last_message?.time.toLocaleTimeString()}</p> {/* TODO: Format as "2min ago" */}
 		<div className='flex flex-row'>
 			<div className='profilePicture' /> {/* Profile picture placeholder. TODO: Include indicator for people who are online */}
 			<div className='self-center'>
-				<p className='font-bold text-lg'>{participants.join(', ')}</p>
-				<p>{last_message ?? 'Click to start a conversaiton'}</p>
+				<p className='font-bold text-lg'>{participants.map((p) => p.name).join(', ')}</p>
+				<p className='max-h-6 overflow-hidden'>
+					{last_message ? `${last_message.username}: ${last_message.message}` : 'Click to start a conversaiton'}
+				</p>
 			</div>
 		</div>
 	</div>
@@ -26,56 +29,66 @@ function ConversationComponent({ participants, last_message_time, last_message }
 
 export type ConversationListProps = {
 	conversations: ConversationProps[],
-	available_users: { name: string, id: number }[],
+	available_users: User[],
 }
 export default function ConversationListComponent({ conversations, available_users }: ConversationListProps) {
+	const userInfo = EnsureLoggedIn(useContext(LoginContext));
 	const [activeConversation, setConversation] = useState<ChatProps | undefined>();
+	const [nextTemporaryId, setTempId] = useState(-1);
 
-	async function conversationClick(url_path: string) {
+	async function loadConversation(id: number): Promise<ChatProps> {
 		const spinner = document.getElementById('messagesSpinner');
 		if (spinner) spinner.hidden = false;
-		const response = await fetch(`/messages/${url_path}`);
+		const conversation = await getConversation(id, await userInfo.privateKey);
 		if (spinner) spinner.hidden = true;
 
-		if (!response.ok) {
+		if (isError(conversation)) {
 			alert('error');
 			throw 'Bad conversation request';
 		}
-		const data = await response.json();
-		if (isChatProps(data)) {
-			return data;
-		} else {
-			alert('error');
-			throw 'Bad conversation data';
+		return conversation;
+	}
+
+	async function openConversation(conversaiton: ConversationProps) {
+		let chat: ChatProps;
+		if (conversaiton.id < 0) {
+			// A negative conversation id indicates the conversation hasn't been created yet on the server. (we have a dummy conversation locally)
+			// Thus we can't load it normally. Instead, we create a ChatProps object manually.
+			// We have all the required info: id, participants, and obiously a non-existent conversation has no messages.
+			chat = {
+				conversation_id: conversaiton.id,
+				messages: [],
+				participants: conversaiton.participants,
+			}
+		} else
+			chat = await loadConversation(conversaiton.id);
+		setConversation(chat);
+	}
+
+	async function startConversation(user: User) {
+		// dummy conversation; it won't be created for real until first message is sent
+		const newConversation: ConversationProps = {
+			id: nextTemporaryId,
+			participants: [user],
 		}
-	}
-
-	async function openConversation(id: number) {
-		const chat = await conversationClick(id.toString());
-		setConversation(chat);
-	}
-
-	async function startConversation(user_id: number) {
-		const chat = await conversationClick(`start/${user_id}`);
-		setConversation(chat);
+		setTempId(nextTemporaryId - 1);
+		openConversation(newConversation);
 		// Update list of conversations
-		available_users.splice(available_users.findIndex((u) => u.id == user_id), 1);
-		conversations.push({
-			id: chat.conversation_id,
-			participants: chat.participants,
-			last_message_time: new Date(),
-		});
+		available_users.splice(available_users.findIndex((u) => u.id == user.id), 1);
+		conversations.push(newConversation);
 	}
 
-	// TEST
-	useEffect(() => {
-		for (let i = 0; i < 20; i++) {
-			available_users.push({ name: `FAKE USER ${i}`, id: 0 });
+	function handleCreated(old_id: number, new_id: number) {
+		for (const c of conversations) {
+			if (c.id === old_id) {
+				c.id = new_id;
+				break;
+			}
 		}
-	});
+	}
 
 	return <div className={styles.root}>
-		<div className={`flex-shrink-0 flex-grow-0 flex flex-col gap-y-3 m-6 items-center overflow-y-scroll`}>
+		<div className={`flex-shrink-0 flex-grow-0 flex flex-col gap-y-3 m-6 items-center overflow-y-scroll max-w-[20%]`}>
 			<p className='text-2xl font-bold'>Recent Chats</p>
 			<div className='textInput relative'>
 				<input placeholder='search'></input>
@@ -83,17 +96,17 @@ export default function ConversationListComponent({ conversations, available_use
 					<CiSearch />
 				</button>
 			</div>
-			{conversations.map((c, i) => <div key={i} onClick={() => openConversation(c.id)}>
+			{conversations.map((c, i) => <div className='w-full' key={i} onClick={() => openConversation(c)}>
 				<ConversationComponent {...c} />
 			</div>)}
 			<p className='text-2xl font-bold'>Start a conversation</p>
-			{available_users.map((u, i) => <div key={i} onClick={() => startConversation(u.id)}>
-				<ConversationComponent participants={[u.name]} id={u.id} />
+			{available_users.map((u, i) => <div key={i} onClick={() => startConversation(u)}>
+				<ConversationComponent participants={[u]} id={u.id} />
 			</div>)}
 		</div>
 		<div className='flex-grow relative'>
 			<div id='messagesSpinner' hidden className='spinner w-16 h-16'></div>
-			{activeConversation ? <ChatComponent {...activeConversation} /> : <></>}
+			{activeConversation ? <ChatComponent {...activeConversation} createdHandler={handleCreated} /> : <></>}
 		</div>
 	</div>
 }
